@@ -1,4 +1,4 @@
-import { INPUT_ERROR } from "./constants";
+import { INPUT_ERROR, ARRAY_BUFFER } from "./constants";
 
 // 检查是否为数组
 export function isArray(obj: any): bool {
@@ -22,34 +22,29 @@ function formatMessageUint8Array(message: Uint8Array): StaticArray<any> {
   return [message, false];
 }
 
-// 格式化消息
-export function formatMessageStringWrapper(message: string): StaticArray<any> {
-  return formatMessageString(message);
-}
-
-export function formatMessageUint8ArrayWrapper(
-  message: Uint8Array
+// 新增的函数
+export function formatMessage(
+  message: string | Uint8Array | ArrayBuffer | null
 ): StaticArray<any> {
-  return formatMessageUint8Array(message);
+  let type = typeof message;
+  if (type === "string") {
+    return formatMessageString(message as string);
+  }
+  if (type !== "object" || message === null) {
+    throw new Error(INPUT_ERROR);
+  }
+  if (ARRAY_BUFFER && (message as ArrayBuffer).constructor === ArrayBuffer) {
+    return formatMessageUint8Array(new Uint8Array(message as ArrayBuffer));
+  }
+  if (!isArray(message) && !isView(message)) {
+    throw new Error(INPUT_ERROR);
+  }
+  return [message, false];
 }
 
-// 检查字符串是否为空
-function emptyString(message: string): bool {
-  return formatMessageString(message)[0].length === 0;
-}
-
-// 检查Uint8Array是否为空
-function emptyUint8Array(message: Uint8Array): bool {
-  return formatMessageUint8Array(message)[0].length === 0;
-}
-
-// 检查消息是否为空
-export function emptyStringWrapper(message: string): bool {
-  return emptyString(message);
-}
-
-export function emptyUint8ArrayWrapper(message: Uint8Array): bool {
-  return emptyUint8Array(message);
+// 新增的函数
+export function empty(message: string | Uint8Array | ArrayBuffer | null): bool {
+  return (formatMessage(message)[0] as string | Uint8Array).length === 0;
 }
 
 // 克隆Uint32Array
@@ -57,6 +52,15 @@ export function cloneArray(array: Uint32Array): Uint32Array {
   const newArray = new Uint32Array(array.length);
   for (let i = 0; i < array.length; ++i) {
     newArray[i] = array[i];
+  }
+  return newArray;
+}
+
+// 泛型克隆数组
+export function cloneArrayGeneric<T>(array: StaticArray<T>): StaticArray<T> {
+  let newArray = new StaticArray<T>(array.length);
+  for (let i = 0; i < array.length; ++i) {
+    unchecked((newArray[i] = array[i]));
   }
   return newArray;
 }

@@ -1,10 +1,17 @@
-export const COMMON_JS: bool =
-  !hasWindow &&
-  typeof module !== "undefined" &&
-  typeof module.exports !== "undefined";
-export const AMD: bool = typeof define !== "undefined" && define.amd;
-export const ARRAY_BUFFER: bool = typeof ArrayBuffer !== "undefined";
+export const INPUT_ERROR: string = "input is invalid type";
+export const FINALIZE_ERROR: string = "finalize already called";
 
+// 默认情况下假设没有 window 对象
+export const WINDOW: bool = false;
+export const WEB_WORKER: bool = false;
+export const NODE_JS: bool = false;
+export const COMMON_JS: bool = false;
+export const AMD: bool = false;
+export const ARRAY_BUFFER: bool = false;
+
+export const root: Map<string, bool> = new Map<string, bool>();
+
+// 其他常量定义
 export const HEX_CHARS: string[] = "0123456789abcdef".split("");
 export const SHAKE_PADDING: i32[] = [31, 7936, 2031616, 520093696];
 export const CSHAKE_PADDING: i32[] = [4, 1024, 262144, 67108864];
@@ -28,6 +35,36 @@ export const OUTPUT_TYPES: string[] = [
   "array",
   "digest",
 ];
-export const CSHAKE_BYTEPAD: StaticArray<i32> = StaticArray.fromArray([
-  168, 136,
-]);
+export const CSHAKE_BYTEPAD: StaticArray<i32> = [168, 136];
+
+// 模拟不同环境的检测
+function detectEnvironment(): void {
+  const hasWindow: bool = false;
+  const hasSelf: bool = false;
+  const hasProcess: bool = false;
+  const hasModule: bool = false;
+  const hasDefine: bool = false;
+  const hasArrayBuffer: bool = true;
+
+  if (hasWindow) {
+    root.set("WINDOW", true);
+  } else {
+    root.set("WINDOW", false);
+  }
+
+  root.set("WEB_WORKER", !root.get("WINDOW") && hasSelf);
+  root.set("NODE_JS", !root.get("WINDOW") && hasProcess);
+
+  if (root.get("NODE_JS")) {
+    // 模拟 global 对象
+    root.set("global", true);
+  } else if (root.get("WEB_WORKER")) {
+    root.set("self", true);
+  }
+
+  root.set("COMMON_JS", !root.get("WINDOW") && hasModule);
+  root.set("AMD", hasDefine);
+  root.set("ARRAY_BUFFER", hasArrayBuffer);
+}
+
+detectEnvironment();
