@@ -6,52 +6,64 @@ import {
   FINALIZE_ERROR,
   KECCAK_PADDING,
   BITS,
+  ARRAY_BUFFER,
 } from "./constants";
 
-export function isArray(obj: any): bool {
+// 检查是否为数组
+export function isArray(obj: string | Uint8Array | ArrayBuffer | null): bool {
   return Object.prototype.toString.call(obj) === "[object Array]";
 }
 
 // 检查是否为视图
-export function isView(obj: any): bool {
+export function isView(obj: string | Uint8Array | ArrayBuffer | null): bool {
   return (
-    typeof obj === "object" && obj.buffer && obj.buffer instanceof ArrayBuffer
+    typeof obj === "object" &&
+    obj !== null &&
+    obj.hasOwnProperty("buffer") &&
+    obj.buffer instanceof ArrayBuffer
   );
 }
 
 // 格式化消息为字符串
-function formatMessageString(message: string): StaticArray<any> {
-  return [message, true];
+function formatMessageString(message: string): StaticArray<string> {
+  return [message];
 }
 
 // 格式化消息为Uint8Array
-function formatMessageUint8Array(message: Uint8Array): StaticArray<any> {
-  return [message, false];
+function formatMessageUint8Array(message: Uint8Array): StaticArray<Uint8Array> {
+  return [message];
 }
 
-// 新增的函数
-export function formatMessage(
-  message: string | Uint8Array | ArrayBuffer | null
-): StaticArray<any> {
-  let type = typeof message;
-  if (type === "string") {
-    return formatMessageString(message as string);
-  }
-  if (type !== "object" || message === null) {
-    throw new Error(INPUT_ERROR);
-  }
-  if (ARRAY_BUFFER && (message as ArrayBuffer).constructor === ArrayBuffer) {
-    return formatMessageUint8Array(new Uint8Array(message as ArrayBuffer));
-  }
-  if (!isArray(message) && !isView(message)) {
-    throw new Error(INPUT_ERROR);
-  }
-  return [message, false];
+// 格式化消息为字符串或Uint8Array
+export function formatMessageStringWrapper(
+  message: string
+): StaticArray<string> {
+  return formatMessageString(message);
 }
 
-// 新增的函数
-export function empty(message: string | Uint8Array | ArrayBuffer | null): bool {
-  return (formatMessage(message)[0] as string | Uint8Array).length === 0;
+export function formatMessageUint8ArrayWrapper(
+  message: Uint8Array
+): StaticArray<Uint8Array> {
+  return formatMessageUint8Array(message);
+}
+
+// 检查字符串是否为空
+function emptyString(message: string): bool {
+  return formatMessageString(message)[0].length === 0;
+}
+
+// 检查Uint8Array是否为空
+function emptyUint8Array(message: Uint8Array): bool {
+  return formatMessageUint8Array(message)[0].length === 0;
+}
+
+// 检查消息是否为空
+export function emptyStringWrapper(message: string): bool {
+  return emptyString(message);
+}
+
+export function emptyUint8ArrayWrapper(message: Uint8Array): bool {
+  return emptyUint8Array(message);
 }
 
 // 克隆Uint32Array
