@@ -9,34 +9,21 @@ async function loadWasmModule() {
 class KeccakWrapper {
   constructor(bits) {
     this.bits = bits;
+    this.instance = null;
   }
 
   async initialize() {
-    this.wasm = await loadWasmModule();
-    this.instance = new this.wasm.Keccak(
-      this.bits,
-      this.wasm.KECCAK_PADDING,
-      this.bits
-    );
+    this.instance = await loadWasmModule();
+    this.instance.createKeccak(this.bits);
   }
 
   update(message) {
-    this.instance.update(message);
+    this.instance.updateKeccak(message);
   }
 
   finalize() {
-    this.instance.finalize();
-    const result = new Uint8Array(this.bits / 8);
-    for (let i = 0; i < result.length; i++) {
-      result[i] = this.instance.s[i];
-    }
-    return this.toHex(result);
-  }
-
-  toHex(buffer) {
-    return Array.prototype.map
-      .call(buffer, (x) => ("00" + x.toString(16)).slice(-2))
-      .join("");
+    this.instance.finalizeKeccak();
+    return this.instance.keccakToHex();
   }
 }
 
