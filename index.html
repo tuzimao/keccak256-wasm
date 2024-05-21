@@ -41,7 +41,7 @@
       update(message) {
         const encoder = new TextEncoder();
         const encodedMessage = encoder.encode(message);
-        const ptr = this.instance.__newArray(this.instance.UINT8ARRAY_ID, encodedMessage);
+        const ptr = this.instance.__allocArray(this.instance.UINT8ARRAY_ID, encodedMessage);
         this.instance.updateKeccakWithUint8Array(ptr, encodedMessage.length);
         this.instance.__release(ptr);
       }

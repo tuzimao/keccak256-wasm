@@ -1,10 +1,4 @@
-import {
-  HEX_CHARS,
-  SHIFT,
-  RC,
-  FINALIZE_ERROR,
-  KECCAK_PADDING,
-} from "./constants";
+import { HEX_CHARS, SHIFT, RC, FINALIZE_ERROR, KECCAK_PADDING } from "./constants";
 
 // 克隆Uint32Array
 function cloneUint32Array(array: Uint32Array): Uint32Array {
@@ -171,9 +165,49 @@ class Keccak {
     return bytes.length;
   }
 
+  encodeString(str: string): i32 {
+    let result = this.formatMessage(str);
+    str = result[0] as string;
+    let isString: bool = result[1];
+    let bytes: i32 = 0;
+    let length: i32 = str.length;
+
+    if (isString) {
+      for (let i = 0; i < length; ++i) {
+        let code: i32 = str.charCodeAt(i);
+        if (code < 0x80) {
+          bytes += 1;
+        } else if (code < 0x800) {
+          bytes += 2;
+        } else if (code < 0xd800 || code >= 0xe000) {
+          bytes += 3;
+        } else {
+          code = 0x10000 + (((code & 0x3ff) << 10) | (str.charCodeAt(++i) & 0x3ff));
+          bytes += 4;
+        }
+      }
+    } else {
+      bytes = length;
+    }
+    bytes += this.encode(bytes * 8);
+    this.update(str);
+    return bytes;
+  }
+
+  bytepad(strs: string[], w: i32): Keccak {
+    let bytes: i32 = this.encode(w);
+    for (let i = 0; i < strs.length; ++i) {
+      bytes += this.encodeString(strs[i]);
+    }
+    let paddingBytes: i32 = (w - (bytes % w)) % w;
+    let zeros: u8[] = new Array<u8>(paddingBytes);
+    this.updateBytes(zeros);
+    return this;
+  }
+
   updateBytes(bytes: u8[]): void {
     for (let i = 0; i < bytes.length; i++) {
-      this.updateString(String.fromCharCode(bytes[i]));
+      this.update(String.fromCharCode(bytes[i]));
     }
   }
 
@@ -566,8 +600,18 @@ class Keccak {
   }
 }
 
-let keccakInstance: Keccak | null = null;
+class Kmac extends Keccak {
+  constructor(bits: i32, padding: StaticArray<u32>, outputBits: i32) {
+    super(bits, padding, outputBits);
+  }
 
+  finalize(): void {
+    this.encode(this.outputBits, true);
+    super.finalize();
+  }
+}
+
+let keccakInstance: Keccak | null = null;
 export function createKeccak(bits: i32): void {
   const padding: StaticArray<u32> = new StaticArray<u32>(4);
   padding[0] = 0x01;
