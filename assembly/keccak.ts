@@ -2,69 +2,9 @@ import {
   HEX_CHARS,
   SHIFT,
   RC,
-  INPUT_ERROR,
   FINALIZE_ERROR,
   KECCAK_PADDING,
-  BITS,
-  ARRAY_BUFFER,
 } from "./constants";
-
-// 检查是否为数组
-export function isArray(obj: string | Uint8Array | ArrayBuffer | null): bool {
-  return Object.prototype.toString.call(obj) === "[object Array]";
-}
-
-// 检查是否为视图
-export function isView(obj: string | Uint8Array | ArrayBuffer | null): bool {
-  return (
-    typeof obj === "object" &&
-    obj !== null &&
-    obj.hasOwnProperty("buffer") &&
-    obj.buffer instanceof ArrayBuffer
-  );
-}
-
-// 格式化消息为字符串
-function formatMessageString(message: string): StaticArray<string> {
-  return [message];
-}
-
-// 格式化消息为Uint8Array
-function formatMessageUint8Array(message: Uint8Array): StaticArray<Uint8Array> {
-  return [message];
-}
-
-// 格式化消息为字符串或Uint8Array
-export function formatMessageStringWrapper(
-  message: string
-): StaticArray<string> {
-  return formatMessageString(message);
-}
-
-export function formatMessageUint8ArrayWrapper(
-  message: Uint8Array
-): StaticArray<Uint8Array> {
-  return formatMessageUint8Array(message);
-}
-
-// 检查字符串是否为空
-function emptyString(message: string): bool {
-  return formatMessageString(message)[0].length === 0;
-}
-
-// 检查Uint8Array是否为空
-function emptyUint8Array(message: Uint8Array): bool {
-  return formatMessageUint8Array(message)[0].length === 0;
-}
-
-// 检查消息是否为空
-export function emptyStringWrapper(message: string): bool {
-  return emptyString(message);
-}
-
-export function emptyUint8ArrayWrapper(message: Uint8Array): bool {
-  return emptyUint8Array(message);
-}
 
 // 克隆Uint32Array
 function cloneUint32Array(array: Uint32Array): Uint32Array {
@@ -231,50 +171,9 @@ class Keccak {
     return bytes.length;
   }
 
-  encodeString(str: string): i32 {
-    let result = formatMessage(str);
-    str = result[0] as string;
-    let isString: bool = result[1];
-    let bytes: i32 = 0;
-    let length: i32 = str.length;
-
-    if (isString) {
-      for (let i = 0; i < length; ++i) {
-        let code: i32 = str.charCodeAt(i);
-        if (code < 0x80) {
-          bytes += 1;
-        } else if (code < 0x800) {
-          bytes += 2;
-        } else if (code < 0xd800 || code >= 0xe000) {
-          bytes += 3;
-        } else {
-          code =
-            0x10000 + (((code & 0x3ff) << 10) | (str.charCodeAt(++i) & 0x3ff));
-          bytes += 4;
-        }
-      }
-    } else {
-      bytes = length;
-    }
-    bytes += this.encode(bytes * 8);
-    this.update(str);
-    return bytes;
-  }
-
-  bytepad(strs: string[], w: i32): Keccak {
-    let bytes: i32 = this.encode(w);
-    for (let i = 0; i < strs.length; ++i) {
-      bytes += this.encodeString(strs[i]);
-    }
-    let paddingBytes: i32 = (w - (bytes % w)) % w;
-    let zeros: u8[] = new Array<u8>(paddingBytes);
-    this.updateBytes(zeros);
-    return this;
-  }
-
   updateBytes(bytes: u8[]): void {
     for (let i = 0; i < bytes.length; i++) {
-      this.update(String.fromCharCode(bytes[i]));
+      this.updateString(String.fromCharCode(bytes[i]));
     }
   }
 
@@ -664,17 +563,6 @@ class Keccak {
       }
     }
     return array;
-  }
-}
-
-class Kmac extends Keccak {
-  constructor(bits: i32, padding: StaticArray<u32>, outputBits: i32) {
-    super(bits, padding, outputBits);
-  }
-
-  finalize(): void {
-    this.encode(this.outputBits, true);
-    super.finalize();
   }
 }
 

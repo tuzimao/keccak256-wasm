@@ -17,26 +17,6 @@ async function instantiate(module, imports = {}) {
   const { exports } = await WebAssembly.instantiate(module, adaptedImports);
   const memory = exports.memory || imports.env.memory;
   const adaptedExports = Object.setPrototypeOf({
-    formatMessageStringWrapper(message) {
-      // assembly/keccak/formatMessageStringWrapper(~lib/string/String) => ~lib/staticarray/StaticArray<~lib/string/String>
-      message = __lowerString(message) || __notnull();
-      return __liftStaticArray(pointer => __liftString(__getU32(pointer)), 2, exports.formatMessageStringWrapper(message) >>> 0);
-    },
-    formatMessageUint8ArrayWrapper(message) {
-      // assembly/keccak/formatMessageUint8ArrayWrapper(~lib/typedarray/Uint8Array) => ~lib/staticarray/StaticArray<~lib/typedarray/Uint8Array>
-      message = __lowerTypedArray(Uint8Array, 13, 0, message) || __notnull();
-      return __liftStaticArray(pointer => __liftTypedArray(Uint8Array, __getU32(pointer)), 2, exports.formatMessageUint8ArrayWrapper(message) >>> 0);
-    },
-    emptyStringWrapper(message) {
-      // assembly/keccak/emptyStringWrapper(~lib/string/String) => bool
-      message = __lowerString(message) || __notnull();
-      return exports.emptyStringWrapper(message) != 0;
-    },
-    emptyUint8ArrayWrapper(message) {
-      // assembly/keccak/emptyUint8ArrayWrapper(~lib/typedarray/Uint8Array) => bool
-      message = __lowerTypedArray(Uint8Array, 13, 0, message) || __notnull();
-      return exports.emptyUint8ArrayWrapper(message) != 0;
-    },
     updateKeccakWithString(message) {
       // assembly/keccak/updateKeccakWithString(~lib/string/String) => void
       message = __lowerString(message) || __notnull();
@@ -44,7 +24,7 @@ async function instantiate(module, imports = {}) {
     },
     updateKeccakWithUint8Array(message) {
       // assembly/keccak/updateKeccakWithUint8Array(~lib/typedarray/Uint8Array) => void
-      message = __lowerTypedArray(Uint8Array, 13, 0, message) || __notnull();
+      message = __lowerTypedArray(Uint8Array, 12, 0, message) || __notnull();
       exports.updateKeccakWithUint8Array(message);
     },
     keccakToHex() {
@@ -72,14 +52,6 @@ async function instantiate(module, imports = {}) {
     for (let i = 0; i < length; ++i) memoryU16[(pointer >>> 1) + i] = value.charCodeAt(i);
     return pointer;
   }
-  function __liftTypedArray(constructor, pointer) {
-    if (!pointer) return null;
-    return new constructor(
-      memory.buffer,
-      __getU32(pointer + 4),
-      __dataview.getUint32(pointer + 8, true) / constructor.BYTES_PER_ELEMENT
-    ).slice();
-  }
   function __lowerTypedArray(constructor, id, align, values) {
     if (values == null) return 0;
     const
@@ -93,14 +65,6 @@ async function instantiate(module, imports = {}) {
     exports.__unpin(buffer);
     return header;
   }
-  function __liftStaticArray(liftElement, align, pointer) {
-    if (!pointer) return null;
-    const
-      length = __getU32(pointer - 4) >>> align,
-      values = new Array(length);
-    for (let i = 0; i < length; ++i) values[i] = liftElement(pointer + (i << align >>> 0));
-    return values;
-  }
   function __notnull() {
     throw TypeError("value must not be null");
   }
@@ -113,22 +77,10 @@ async function instantiate(module, imports = {}) {
       __dataview.setUint32(pointer, value, true);
     }
   }
-  function __getU32(pointer) {
-    try {
-      return __dataview.getUint32(pointer, true);
-    } catch {
-      __dataview = new DataView(memory.buffer);
-      return __dataview.getUint32(pointer, true);
-    }
-  }
   return adaptedExports;
 }
 export const {
   memory,
-  formatMessageStringWrapper,
-  formatMessageUint8ArrayWrapper,
-  emptyStringWrapper,
-  emptyUint8ArrayWrapper,
   createKeccak,
   updateKeccakWithString,
   updateKeccakWithUint8Array,

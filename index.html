@@ -1,11 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Keccak WebAssembly</title>
-    <script type="module" src="keccak_wrapper.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Keccak WASM Test</title>
 </head>
 <body>
-    <h1>Check the console for the hash output</h1>
+  <h1>Keccak WASM Test</h1>
+  <input type="text" id="inputMessage" placeholder="Enter a message" />
+  <button onclick="computeHash()">Compute Keccak-256 Hash</button>
+  <p id="result"></p>
+
+  <script type="module">
+    import * as loader from "@assemblyscript/loader";
+
+    let keccakInstance;
+
+    async function loadWasmModule() {
+      const imports = {
+        env: {
+          memory: new WebAssembly.Memory({ initial: 256, maximum: 256 }),
+          abort: console.log
+        }
+      };
+      const wasmModule = await loader.instantiate(fetch("build/keccak.wasm"), imports);
+      return wasmModule.exports;
+    }
+
+    class KeccakWrapper {
+      constructor(bits) {
+        this.bits = bits;
+        this.instance = null;
+      }
+
+      async initialize() {
+        this.instance = await loadWasmModule();
+        this.instance.createKeccak(this.bits);
+      }
+
+      update(message) {
+        const encoder = new TextEncoder();
+        const encodedMessage = encoder.encode(message);
+        const ptr = this.instance.__newArray(this.instance.UINT8ARRAY_ID, encodedMessage);
+        this.instance.updateKeccakWithUint8Array(ptr, encodedMessage.length);
+        this.instance.__release(ptr);
+      }
+
+      finalize() {
+        this.instance.finalizeKeccak();
+        const ptr = this.instance.keccakToHex();
+        const hex = this.instance.__getString(ptr);
+        this.instance.__release(ptr);
+        return hex;
+      }
+    }
+
+    async function computeHash() {
+      const message = document.getElementById("inputMessage").value;
+      const keccak = new KeccakWrapper(256);
+      await keccak.initialize();
+      keccak.update(message);
+      const hash = keccak.finalize();
+      document.getElementById("result").textContent = "Keccak-256 Hash: " + hash;
+    }
+  </script>
 </body>
 </html>
