@@ -67,27 +67,18 @@ export function emptyUint8ArrayWrapper(message: Uint8Array): bool {
 }
 
 // 克隆Uint32Array
-export function cloneArray(array: Uint32Array): Uint32Array {
-  const newArray = new Uint32Array(array.length);
+function cloneUint32Array(array: Uint32Array): Uint32Array {
+  let newArray = new Uint32Array(array.length);
   for (let i = 0; i < array.length; ++i) {
     newArray[i] = array[i];
   }
   return newArray;
 }
 
-// 泛型克隆数组
-export function cloneArrayGeneric<T>(array: StaticArray<T>): StaticArray<T> {
-  let newArray = new StaticArray<T>(array.length);
-  for (let i = 0; i < array.length; ++i) {
-    unchecked((newArray[i] = array[i]));
-  }
-  return newArray;
-}
-
-export class Keccak {
+class Keccak {
   private blocks: Uint32Array;
   private s: Uint32Array;
-  private padding: u32;
+  private padding: StaticArray<u32>;
   private outputBits: i32;
   private reset: bool;
   private finalized: bool;
@@ -99,7 +90,7 @@ export class Keccak {
   private extraBytes: i32;
   private lastByteIndex: i32;
 
-  constructor(bits: i32, padding: u32, outputBits: i32) {
+  constructor(bits: i32, padding: StaticArray<u32>, outputBits: i32) {
     this.blocks = new Uint32Array(50);
     this.s = new Uint32Array(50);
     this.padding = padding;
@@ -118,125 +109,106 @@ export class Keccak {
     }
   }
 
- class Keccak {
-    // 之前定义的所有属性和方法
-
-    // 添加两个独立的方法来处理不同类型的输入
-    updateString(message: string): Keccak {
-        if (this.finalized) {
-            throw new Error(FINALIZE_ERROR);
-        }
-
-        let blocks = this.blocks;
-        let byteCount = this.byteCount;
-        let length = message.length;
-        let blockCount = this.blockCount;
-        let index: i32 = 0;
-        let s = this.s;
-        let i: i32 = 0, code: i32;
-
-        while (index < length) {
-            if (this.reset) {
-                this.reset = false;
-                blocks[0] = this.block;
-                for (i = 1; i < blockCount + 1; ++i) {
-                    blocks[i] = 0;
-                }
-            }
-            for (i = this.start; index < length && i < byteCount; ++index) {
-                code = message.charCodeAt(index);
-                if (code < 0x80) {
-                    blocks[i >> 2] |= code << SHIFT[i & 3];
-                } else if (code < 0x800) {
-                    blocks[i >> 2] |= (0xc0 | (code >> 6)) << SHIFT[i & 3];
-                    blocks[i >> 2] |= (0x80 | (code & 0x3f)) << SHIFT[(i + 1) & 3];
-                } else if (code < 0xd800 || code >= 0xe000) {
-                    blocks[i >> 2] |= (0xe0 | (code >> 12)) << SHIFT[i & 3];
-                    blocks[i >> 2] |= (0x80 | ((code >> 6) & 0x3f)) << SHIFT[(i + 1) & 3];
-                    blocks[i >> 2] |= (0x80 | (code & 0x3f)) << SHIFT[(i + 2) & 3];
-                } else {
-                    code = 0x10000 + (((code & 0x3ff) << 10) | (message.charCodeAt(++index) & 0x3ff));
-                    blocks[i >> 2] |= (0xf0 | (code >> 18)) << SHIFT[i & 3];
-                    blocks[i >> 2] |= (0x80 | ((code >> 12) & 0x3f)) << SHIFT[(i + 1) & 3];
-                    blocks[i >> 2] |= (0x80 | ((code >> 6) & 0x3f)) << SHIFT[(i + 2) & 3];
-                    blocks[i >> 2] |= (0x80 | (code & 0x3f)) << SHIFT[(i + 3) & 3];
-                }
-                i++;
-            }
-
-            this.lastByteIndex = i;
-            if (i >= byteCount) {
-                this.start = i - byteCount;
-                this.block = blocks[blockCount];
-                for (i = 0; i < blockCount; ++i) {
-                    s[i] ^= blocks[i];
-                }
-                this.permute(s);
-                this.reset = true;
-            } else {
-                this.start = i;
-            }
-        }
-        return this;
+  updateString(message: string): Keccak {
+    if (this.finalized) {
+      throw new Error(FINALIZE_ERROR);
     }
 
-    updateUint8Array(message: Uint8Array): Keccak {
-        if (this.finalized) {
-            throw new Error(FINALIZE_ERROR);
+    let blocks = this.blocks;
+    let byteCount = this.byteCount;
+    let length = message.length;
+    let blockCount = this.blockCount;
+    let index: i32 = 0;
+    let s = this.s;
+    let i: i32 = 0, code: i32;
+
+    while (index < length) {
+      if (this.reset) {
+        this.reset = false;
+        blocks[0] = this.block;
+        for (i = 1; i < blockCount + 1; ++i) {
+          blocks[i] = 0;
         }
-
-        let blocks = this.blocks;
-        let byteCount = this.byteCount;
-        let length = message.length;
-        let blockCount = this.blockCount;
-        let index: i32 = 0;
-        let s = this.s;
-        let i: i32 = 0, code: i32;
-
-        while (index < length) {
-            if (this.reset) {
-                this.reset = false;
-                blocks[0] = this.block;
-                for (i = 1; i < blockCount + 1; ++i) {
-                    blocks[i] = 0;
-                }
-            }
-            for (i = this.start; index < length && i < byteCount; ++index) {
-                code = message[index];
-                blocks[i >> 2] |= code << SHIFT[i & 3];
-                i++;
-            }
-
-            this.lastByteIndex = i;
-            if (i >= byteCount) {
-                this.start = i - byteCount;
-                this.block = blocks[blockCount];
-                for (i = 0; i < blockCount; ++i) {
-                    s[i] ^= blocks[i];
-                }
-                this.permute(s);
-                this.reset = true;
-            } else {
-                this.start = i;
-            }
-        }
-        return this;
-    }
-
-    // 修改 update 方法来调用相应的处理函数
-    update(message: string | Uint8Array): Keccak {
-        if (typeof message === "string") {
-            return this.updateString(message);
-        } else if (message instanceof Uint8Array) {
-            return this.updateUint8Array(message);
+      }
+      for (i = this.start; index < length && i < byteCount; ++index) {
+        code = message.charCodeAt(index);
+        if (code < 0x80) {
+          blocks[i >> 2] |= code << SHIFT[i & 3];
+        } else if (code < 0x800) {
+          blocks[i >> 2] |= (0xc0 | (code >> 6)) << SHIFT[i & 3];
+          blocks[i >> 2] |= (0x80 | (code & 0x3f)) << SHIFT[(i + 1) & 3];
+        } else if (code < 0xd800 || code >= 0xe000) {
+          blocks[i >> 2] |= (0xe0 | (code >> 12)) << SHIFT[i & 3];
+          blocks[i >> 2] |= (0x80 | ((code >> 6) & 0x3f)) << SHIFT[(i + 1) & 3];
+          blocks[i >> 2] |= (0x80 | (code & 0x3f)) << SHIFT[(i + 2) & 3];
         } else {
-            throw new Error(INPUT_ERROR);
+          code = 0x10000 + (((code & 0x3ff) << 10) | (message.charCodeAt(++index) & 0x3ff));
+          blocks[i >> 2] |= (0xf0 | (code >> 18)) << SHIFT[i & 3];
+          blocks[i >> 2] |= (0x80 | ((code >> 12) & 0x3f)) << SHIFT[(i + 1) & 3];
+          blocks[i >> 2] |= (0x80 | ((code >> 6) & 0x3f)) << SHIFT[(i + 2) & 3];
+          blocks[i >> 2] |= (0x80 | (code & 0x3f)) << SHIFT[(i + 3) & 3];
         }
+        i++;
+      }
+
+      this.lastByteIndex = i;
+      if (i >= byteCount) {
+        this.start = i - byteCount;
+        this.block = blocks[blockCount];
+        for (i = 0; i < blockCount; ++i) {
+          s[i] ^= blocks[i];
+        }
+        this.permute(s);
+        this.reset = true;
+      } else {
+        this.start = i;
+      }
+    }
+    return this;
+  }
+
+  updateUint8Array(message: Uint8Array): Keccak {
+    if (this.finalized) {
+      throw new Error(FINALIZE_ERROR);
     }
 
-    // 其他方法...
-}
+    let blocks = this.blocks;
+    let byteCount = this.byteCount;
+    let length = message.length;
+    let blockCount = this.blockCount;
+    let index: i32 = 0;
+    let s = this.s;
+    let i: i32 = 0, code: i32;
 
+    while (index < length) {
+      if (this.reset) {
+        this.reset = false;
+        blocks[0] = this.block;
+        for (i = 1; i < blockCount + 1; ++i) {
+          blocks[i] = 0;
+        }
+      }
+      for (i = this.start; index < length && i < byteCount; ++index) {
+        code = message[index];
+        blocks[i >> 2] |= code << SHIFT[i & 3];
+        i++;
+      }
+
+      this.lastByteIndex = i;
+      if (i >= byteCount) {
+        this.start = i - byteCount;
+        this.block = blocks[blockCount];
+        for (i = 0; i < blockCount; ++i) {
+          s[i] ^= blocks[i];
+        }
+        this.permute(s);
+        this.reset = true;
+      } else {
+        this.start = i;
+      }
+    }
+    return this;
+  }
 
   encode(x: i32, right: bool): i32 {
     let o: i32 = x & 255;
@@ -570,8 +542,8 @@ export class Keccak {
       s[48] = b48 ^ (~b40 & b42);
       s[49] = b49 ^ (~b41 & b43);
 
-      s[0] ^= RC[n];
-      s[1] ^= RC[n + 1];
+      s[0] ^= RC[n] as u32;
+      s[1] ^= RC[n + 1] as u32;
     }
   }
 
@@ -603,7 +575,7 @@ export class Keccak {
           HEX_CHARS[(block >> 24) & 0x0f];
       }
       if (j % blockCount === 0) {
-        s = cloneArray(s);
+        s = cloneUint32Array(s);
         this.permute(s);
         j = 0;
       }
@@ -644,7 +616,7 @@ export class Keccak {
         array[j] = s[i];
       }
       if (j % blockCount === 0) {
-        s = cloneArray(s);
+        s = cloneUint32Array(s);
         this.permute(s);
       }
     }
@@ -676,7 +648,7 @@ export class Keccak {
         array[offset + 3] = (block >> 24) & 0xff;
       }
       if (j % blockCount === 0) {
-        s = cloneArray(s);
+        s = cloneUint32Array(s);
         this.permute(s);
       }
     }
@@ -693,18 +665,10 @@ export class Keccak {
     }
     return array;
   }
-
-  buffer(): ArrayBuffer {
-    return this.arrayBuffer();
-  }
-
-  array(): Uint8Array {
-    return this.digest();
-  }
 }
 
 class Kmac extends Keccak {
-  constructor(bits: i32, padding: u32, outputBits: i32) {
+  constructor(bits: i32, padding: StaticArray<u32>, outputBits: i32) {
     super(bits, padding, outputBits);
   }
 
@@ -717,24 +681,35 @@ class Kmac extends Keccak {
 let keccakInstance: Keccak | null = null;
 
 export function createKeccak(bits: i32): void {
-  keccakInstance = new Keccak(bits, KECCAK_PADDING, bits);
+  const padding: StaticArray<u32> = new StaticArray<u32>(4);
+  padding[0] = 0x01;
+  padding[1] = 0x01;
+  padding[2] = 0x01;
+  padding[3] = 0x01;
+  keccakInstance = new Keccak(bits, padding, bits);
 }
 
-export function updateKeccak(message: string): void {
-  if (keccakInstance) {
-    keccakInstance.update(message);
+export function updateKeccakWithString(message: string): void {
+  if (keccakInstance !== null) {
+    (keccakInstance as Keccak).updateString(message);
+  }
+}
+
+export function updateKeccakWithUint8Array(message: Uint8Array): void {
+  if (keccakInstance !== null) {
+    (keccakInstance as Keccak).updateUint8Array(message);
   }
 }
 
 export function finalizeKeccak(): void {
-  if (keccakInstance) {
-    keccakInstance.finalize();
+  if (keccakInstance !== null) {
+    (keccakInstance as Keccak).finalize();
   }
 }
 
 export function keccakToHex(): string {
-  if (keccakInstance) {
-    return keccakInstance.toHex();
+  if (keccakInstance !== null) {
+    return (keccakInstance as Keccak).hex();
   }
   return "";
 }

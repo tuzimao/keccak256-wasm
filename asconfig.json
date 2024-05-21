@@ -1,22 +1,18 @@
 {
   "targets": {
     "debug": {
-      "outFile": "build/debug.wasm",
-      "textFile": "build/debug.wat",
+      "outFile": "build/keccak.wasm",
       "sourceMap": true,
       "debug": true
     },
     "release": {
-      "outFile": "build/release.wasm",
-      "textFile": "build/release.wat",
-      "sourceMap": true,
-      "optimizeLevel": 3,
-      "shrinkLevel": 0,
-      "converge": false,
-      "noAssert": false
+      "outFile": "build/keccak.wasm",
+      "optimize": true,
+      "sourceMap": false
     }
   },
   "options": {
-    "bindings": "esm"
+    "bindings": "esm",
+    "transform": []
   }
 }

@@ -24,7 +24,7 @@ async function instantiate(module, imports = {}) {
     },
     formatMessageUint8ArrayWrapper(message) {
       // assembly/keccak/formatMessageUint8ArrayWrapper(~lib/typedarray/Uint8Array) => ~lib/staticarray/StaticArray<~lib/typedarray/Uint8Array>
-      message = __lowerTypedArray(Uint8Array, 10, 0, message) || __notnull();
+      message = __lowerTypedArray(Uint8Array, 13, 0, message) || __notnull();
       return __liftStaticArray(pointer => __liftTypedArray(Uint8Array, __getU32(pointer)), 2, exports.formatMessageUint8ArrayWrapper(message) >>> 0);
     },
     emptyStringWrapper(message) {
@@ -34,13 +34,22 @@ async function instantiate(module, imports = {}) {
     },
     emptyUint8ArrayWrapper(message) {
       // assembly/keccak/emptyUint8ArrayWrapper(~lib/typedarray/Uint8Array) => bool
-      message = __lowerTypedArray(Uint8Array, 10, 0, message) || __notnull();
+      message = __lowerTypedArray(Uint8Array, 13, 0, message) || __notnull();
       return exports.emptyUint8ArrayWrapper(message) != 0;
     },
-    cloneArray(array) {
-      // assembly/keccak/cloneArray(~lib/typedarray/Uint32Array) => ~lib/typedarray/Uint32Array
-      array = __lowerTypedArray(Uint32Array, 12, 2, array) || __notnull();
-      return __liftTypedArray(Uint32Array, exports.cloneArray(array) >>> 0);
+    updateKeccakWithString(message) {
+      // assembly/keccak/updateKeccakWithString(~lib/string/String) => void
+      message = __lowerString(message) || __notnull();
+      exports.updateKeccakWithString(message);
+    },
+    updateKeccakWithUint8Array(message) {
+      // assembly/keccak/updateKeccakWithUint8Array(~lib/typedarray/Uint8Array) => void
+      message = __lowerTypedArray(Uint8Array, 13, 0, message) || __notnull();
+      exports.updateKeccakWithUint8Array(message);
+    },
+    keccakToHex() {
+      // assembly/keccak/keccakToHex() => ~lib/string/String
+      return __liftString(exports.keccakToHex() >>> 0);
     },
   }, exports);
   function __liftString(pointer) {
@@ -120,7 +129,11 @@ export const {
   formatMessageUint8ArrayWrapper,
   emptyStringWrapper,
   emptyUint8ArrayWrapper,
-  cloneArray,
+  createKeccak,
+  updateKeccakWithString,
+  updateKeccakWithUint8Array,
+  finalizeKeccak,
+  keccakToHex,
 } = await (async url => instantiate(
   await (async () => {
     try { return await globalThis.WebAssembly.compileStreaming(globalThis.fetch(url)); }
