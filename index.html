@@ -8,23 +8,22 @@
 <body>
   <h1>Keccak WASM Test</h1>
   <input type="text" id="inputMessage" placeholder="Enter a message" />
-  <button onclick="computeHash()">Compute Keccak-256 Hash</button>
+  <button id="computeHashButton">Compute Keccak-256 Hash</button>
   <p id="result"></p>
 
   <script type="module">
-    import * as loader from "@assemblyscript/loader";
-
-    let keccakInstance;
+    import * as loader from "https://unpkg.com/@assemblyscript/loader/index.js";
 
     async function loadWasmModule() {
-      const imports = {
-        env: {
-          memory: new WebAssembly.Memory({ initial: 256, maximum: 256 }),
-          abort: console.log
-        }
-      };
-      const wasmModule = await loader.instantiate(fetch("build/keccak.wasm"), imports);
-      return wasmModule.exports;
+      try {
+        const response = await fetch("build/keccak.wasm");
+        console.log("WASM module fetched:", response);
+        const wasmModule = await loader.instantiateStreaming(response);
+        console.log("WASM module instantiated:", wasmModule);
+        return wasmModule.exports;
+      } catch (error) {
+        console.error("Failed to instantiate WebAssembly module:", error);
+      }
     }
 
     class KeccakWrapper {
@@ -35,23 +34,27 @@
 
       async initialize() {
         this.instance = await loadWasmModule();
-        this.instance.createKeccak(this.bits);
+        if (this.instance) {
+          this.instance.createKeccak(this.bits);
+        }
       }
 
       update(message) {
-        const encoder = new TextEncoder();
-        const encodedMessage = encoder.encode(message);
-        const ptr = this.instance.__allocArray(this.instance.UINT8ARRAY_ID, encodedMessage);
-        this.instance.updateKeccakWithUint8Array(ptr, encodedMessage.length);
-        this.instance.__release(ptr);
+        if (this.instance) {
+          const messagePtr = this.instance.__pin(this.instance.__newString(message));
+          this.instance.updateKeccakWithString(messagePtr);
+          this.instance.__unpin(messagePtr);
+        }
       }
 
       finalize() {
-        this.instance.finalizeKeccak();
-        const ptr = this.instance.keccakToHex();
-        const hex = this.instance.__getString(ptr);
-        this.instance.__release(ptr);
-        return hex;
+        if (this.instance) {
+          this.instance.finalizeKeccak();
+          const hexPtr = this.instance.keccakToHex();
+          const hex = this.instance.__getString(hexPtr);
+          return hex;
+        }
+        return "";
       }
     }
 
@@ -63,6 +66,8 @@
       const hash = keccak.finalize();
       document.getElementById("result").textContent = "Keccak-256 Hash: " + hash;
     }
+
+    document.getElementById("computeHashButton").addEventListener("click", computeHash);
   </script>
 </body>
 </html>

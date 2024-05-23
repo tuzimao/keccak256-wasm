@@ -189,13 +189,13 @@ class Keccak {
     } else {
       bytes = length;
     }
-    bytes += this.encode(bytes * 8);
-    this.update(str);
+    bytes += this.encode(bytes * 8, false);
+    this.updateString(str);
     return bytes;
   }
 
   bytepad(strs: string[], w: i32): Keccak {
-    let bytes: i32 = this.encode(w);
+    let bytes: i32 = this.encode(w, false);
     for (let i = 0; i < strs.length; ++i) {
       bytes += this.encodeString(strs[i]);
     }
@@ -207,7 +207,7 @@ class Keccak {
 
   updateBytes(bytes: u8[]): void {
     for (let i = 0; i < bytes.length; i++) {
-      this.update(String.fromCharCode(bytes[i]));
+      this.updateString(String.fromCharCode(bytes[i]));
     }
   }
 
