@@ -1,22 +1,20 @@
 {
-  "type": "module",
-  "exports": {
-    ".": {
-      "import": "./build/release.js",
-      "types": "./build/release.d.ts"
-    }
-  },
+  "name": "keccak256-wasm",
+  "version": "1.0.0",
+  "type": "commonjs",
+  "main": "build/release.js",
   "scripts": {
     "asbuild:debug": "asc assembly/index.ts --target debug",
     "asbuild:release": "asc assembly/index.ts --target release",
     "asbuild": "npm run asbuild:debug && npm run asbuild:release",
-    "test": "node tests",
+    "test": "node tests/test_keccak.cjs",
     "start": "npx serve ."
   },
   "devDependencies": {
     "assemblyscript": "^0.27.27"
   },
   "dependencies": {
-    "@assemblyscript/loader": "^0.27.27"
+    "@assemblyscript/loader": "^0.27.27",
+    "js-sha3": "^0.9.3"
   }
 }

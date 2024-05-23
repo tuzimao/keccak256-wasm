@@ -24,7 +24,7 @@ async function instantiate(module, imports = {}) {
     },
     updateKeccakWithUint8Array(message) {
       // assembly/keccak/updateKeccakWithUint8Array(~lib/typedarray/Uint8Array) => void
-      message = __lowerTypedArray(Uint8Array, 12, 0, message) || __notnull();
+      message = __lowerTypedArray(Uint8Array, 11, 0, message) || __notnull();
       exports.updateKeccakWithUint8Array(message);
     },
     keccakToHex() {
