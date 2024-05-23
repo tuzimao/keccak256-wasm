@@ -219,20 +219,25 @@ class Keccak {
     let i = this.lastByteIndex;
     let blockCount = this.blockCount;
     let s = this.s;
-
+    
     blocks[i >> 2] |= this.padding[i & 3];
+    
     if (this.lastByteIndex === this.byteCount) {
       blocks[0] = blocks[blockCount];
-      for (i = 1; i < blockCount + 1; ++i) {
-        blocks[i] = 0;
+      for (let j: i32 = 1; j < blockCount + 1; ++j) {
+        blocks[j] = 0;
       }
     }
+    
     blocks[blockCount - 1] |= 0x80000000;
-    for (i = 0; i < blockCount; ++i) {
-      s[i] ^= blocks[i];
+    
+    for (let j: i32 = 0; j < blockCount; ++j) {
+      s[j] ^= blocks[j];
     }
-    this.permute(s);
+    
+    f(s);
   }
+}
 
   permute(s: Uint32Array): void {
     let h: i32,

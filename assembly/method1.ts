@@ -2,32 +2,22 @@ import { INPUT_ERROR, ARRAY_BUFFER, OUTPUT_TYPES, HEX_CHARS, SHAKE_PADDING, CSHA
 import { Keccak } from "./keccak1";
 import { MessageFormat } from "./types";
 
-// 判断是否是数组
-export function isArray(obj: any): bool {
-  return Object.prototype.toString.call(obj) === '[object Array]';
+
+
+export function formatStringMessage(message: string): [Uint8Array, bool] {
+  const msg = new Uint8Array(message.length);
+  for (let i = 0; i < message.length; i++) {
+    msg[i] = message.charCodeAt(i);
+  }
+  return [msg, true];
 }
 
-// 判断是否是视图
-export function isView(obj: any): bool {
-  return typeof obj === 'object' && obj.buffer && obj.buffer.constructor === ArrayBuffer;
-}
-
-// 格式化消息
-export function formatMessage(message: any): MessageFormat {
-  const type: string = typeof message;
-  if (type === 'string') {
-    return [message, true];
-  }
-  if (type !== 'object' || message === null) {
-    throw new Error(INPUT_ERROR);
-  }
-  if (ARRAY_BUFFER && message.constructor === ArrayBuffer) {
-    return [new Uint8Array(message), false];
-  }
-  if (!isArray(message) && !isView(message)) {
-    throw new Error(INPUT_ERROR);
-  }
+export function formatUint8ArrayMessage(message: Uint8Array): [Uint8Array, bool] {
   return [message, false];
+}
+
+export function formatArrayBufferMessage(message: ArrayBuffer): [Uint8Array, bool] {
+  return [new Uint8Array(message), false];
 }
 
 // 判断消息是否为空
@@ -36,8 +26,8 @@ export function empty(message: any): bool {
 }
 
 // 克隆数组
-export function cloneArray(array: Uint8Array): Uint8Array {
-  const newArray = new Uint8Array(array.length);
+export function cloneArray(array: Uint32Array): Uint32Array {
+  const newArray = new Uint32Array(array.length);
   for (let i = 0; i < array.length; ++i) {
     newArray[i] = array[i];
   }
