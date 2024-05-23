@@ -1,13 +1,6 @@
 import {
     INPUT_ERROR,
     FINALIZE_ERROR,
-    WINDOW,
-    root,
-    WEB_WORKER,
-    NODE_JS,
-    COMMON_JS,
-    AMD,
-    ARRAY_BUFFER,
     HEX_CHARS,
     SHAKE_PADDING,
     CSHAKE_PADDING,
@@ -23,10 +16,9 @@ import {
 
   import {
     formatStringMessage,formatUint8ArrayMessage,formatArrayBufferMessage, cloneArray, createOutputMethod, createShakeOutputMethod,
-    createCshakeOutputMethod, createKmacOutputMethod, createOutputMethods, createMethod,
-    createShakeMethod, createCshakeMethod, createKmacMethod, algorithms, methods, methodNames
+    createOutputMethods, createMethod,
+    createShakeMethod, algorithms, methods, methodNames
   } from "./method1";
-  import { MessageFormat } from "./types";
 
 class Keccak {
   private blocks: Uint32Array;
@@ -61,13 +53,17 @@ class Keccak {
       this.s[i] = 0;
     }
   }
+  keccak256(message: string): string {
+    this.updateString(message);
+    return this.hex();
+  }
 
   updateString(message: string): Keccak {
     if (this.finalized) {
       throw new Error(FINALIZE_ERROR);
     }
 
-    const msg = formatMessage(message);
+    const msg = formatStringMessage(message);
     const blocks = this.blocks;
     const byteCount = this.byteCount;
     const length = msg.length;
@@ -374,71 +370,16 @@ class Keccak {
     return array;
   }
 
-  f(s: Uint32Array): void{
-    let h: i32,
-      l: i32,
-      n: i32,
-      c0: i32,
-      c1: i32,
-      c2: i32,
-      c3: i32,
-      c4: i32,
-      c5: i32,
-      c6: i32,
-      c7: i32,
-      c8: i32,
-      c9: i32;
-    let b0: i32,
-      b1: i32,
-      b2: i32,
-      b3: i32,
-      b4: i32,
-      b5: i32,
-      b6: i32,
-      b7: i32,
-      b8: i32,
-      b9: i32;
-    let b10: i32,
-      b11: i32,
-      b12: i32,
-      b13: i32,
-      b14: i32,
-      b15: i32,
-      b16: i32,
-      b17: i32,
-      b18: i32,
-      b19: i32;
-    let b20: i32,
-      b21: i32,
-      b22: i32,
-      b23: i32,
-      b24: i32,
-      b25: i32,
-      b26: i32,
-      b27: i32,
-      b28: i32,
-      b29: i32;
-    let b30: i32,
-      b31: i32,
-      b32: i32,
-      b33: i32,
-      b34: i32,
-      b35: i32,
-      b36: i32,
-      b37: i32,
-      b38: i32,
-      b39: i32;
-    let b40: i32,
-      b41: i32,
-      b42: i32,
-      b43: i32,
-      b44: i32,
-      b45: i32,
-      b46: i32,
-      b47: i32,
-      b48: i32,
-      b49: i32;
-
+  f(s: Uint32Array): void {
+    let h: u32, l: u32, n: i32;
+    let c0: u32, c1: u32, c2: u32, c3: u32, c4: u32, c5: u32, c6: u32, c7: u32, c8: u32, c9: u32;
+    let b0: u32, b1: u32, b2: u32, b3: u32, b4: u32, b5: u32, b6: u32, b7: u32, b8: u32, b9: u32;
+    let b10: u32, b11: u32, b12: u32, b13: u32, b14: u32, b15: u32, b16: u32, b17: u32;
+    let b18: u32, b19: u32, b20: u32, b21: u32, b22: u32, b23: u32, b24: u32, b25: u32;
+    let b26: u32, b27: u32, b28: u32, b29: u32, b30: u32, b31: u32, b32: u32, b33: u32;
+    let b34: u32, b35: u32, b36: u32, b37: u32, b38: u32, b39: u32, b40: u32, b41: u32;
+    let b42: u32, b43: u32, b44: u32, b45: u32, b46: u32, b47: u32, b48: u32, b49: u32;
+  
     for (n = 0; n < 48; n += 2) {
       c0 = s[0] ^ s[10] ^ s[20] ^ s[30] ^ s[40];
       c1 = s[1] ^ s[11] ^ s[21] ^ s[31] ^ s[41];
@@ -449,8 +390,8 @@ class Keccak {
       c6 = s[6] ^ s[16] ^ s[26] ^ s[36] ^ s[46];
       c7 = s[7] ^ s[17] ^ s[27] ^ s[37] ^ s[47];
       c8 = s[8] ^ s[18] ^ s[28] ^ s[38] ^ s[48];
-      c9 = s[9] ^ s[19] ^ s[29] ^ s[39];
-
+      c9 = s[9] ^ s[19] ^ s[29] ^ s[39] ^ s[49];
+  
       h = c8 ^ ((c2 << 1) | (c3 >>> 31));
       l = c9 ^ ((c3 << 1) | (c2 >>> 31));
       s[0] ^= h;
@@ -463,6 +404,7 @@ class Keccak {
       s[31] ^= l;
       s[40] ^= h;
       s[41] ^= l;
+  
       h = c0 ^ ((c4 << 1) | (c5 >>> 31));
       l = c1 ^ ((c5 << 1) | (c4 >>> 31));
       s[2] ^= h;
@@ -475,6 +417,7 @@ class Keccak {
       s[33] ^= l;
       s[42] ^= h;
       s[43] ^= l;
+  
       h = c2 ^ ((c6 << 1) | (c7 >>> 31));
       l = c3 ^ ((c7 << 1) | (c6 >>> 31));
       s[4] ^= h;
@@ -487,6 +430,7 @@ class Keccak {
       s[35] ^= l;
       s[44] ^= h;
       s[45] ^= l;
+  
       h = c4 ^ ((c8 << 1) | (c9 >>> 31));
       l = c5 ^ ((c9 << 1) | (c8 >>> 31));
       s[6] ^= h;
@@ -499,6 +443,7 @@ class Keccak {
       s[37] ^= l;
       s[46] ^= h;
       s[47] ^= l;
+  
       h = c6 ^ ((c0 << 1) | (c1 >>> 31));
       l = c7 ^ ((c1 << 1) | (c0 >>> 31));
       s[8] ^= h;
@@ -511,7 +456,7 @@ class Keccak {
       s[39] ^= l;
       s[48] ^= h;
       s[49] ^= l;
-
+  
       b0 = s[0];
       b1 = s[1];
       b32 = (s[11] << 4) | (s[10] >>> 28);
@@ -562,7 +507,7 @@ class Keccak {
       b27 = (s[39] << 8) | (s[38] >>> 24);
       b8 = (s[48] << 14) | (s[49] >>> 18);
       b9 = (s[49] << 14) | (s[48] >>> 18);
-
+  
       s[0] = b0 ^ (~b2 & b4);
       s[1] = b1 ^ (~b3 & b5);
       s[10] = b10 ^ (~b12 & b14);
@@ -613,46 +558,16 @@ class Keccak {
       s[39] = b39 ^ (~b31 & b33);
       s[48] = b48 ^ (~b40 & b42);
       s[49] = b49 ^ (~b41 & b43);
-
-      s[0] ^= RC[n] as u32;
-      s[1] ^= RC[n + 1] as u32;
+  
+      s[0] ^= RC[n];
+      s[1] ^= RC[n + 1];
     }
   }
 }
 
-
-export let keccakInstance: Keccak | null = null;
-
-export function createKeccak(bits: i32): void {
-  const padding: StaticArray<u32> = new StaticArray<u32>(4);
-  padding[0] = 0x01;
-  padding[1] = 0x01;
-  padding[2] = 0x01;
-  padding[3] = 0x01;
-  keccakInstance = new Keccak(bits, padding, bits);
+export let keccak: Keccak | null = null;
+export function keccak_256(message: string): string {
+  const keccak = new Keccak(256, KECCAK_PADDING, 256);
+  return keccak.keccak256(message);
 }
 
-export function updateKeccakWithString(message: string): void {
-  if (keccakInstance !== null) {
-    (keccakInstance as Keccak).updateString(message);
-  }
-}
-
-export function updateKeccakWithUint8Array(message: Uint8Array): void {
-  if (keccakInstance !== null) {
-    (keccakInstance as Keccak).updateUint8Array(message);
-  }
-}
-
-export function finalizeKeccak(): void {
-  if (keccakInstance !== null) {
-    (keccakInstance as Keccak).finalize();
-  }
-}
-
-export function keccakToHex(): string {
-  if (keccakInstance !== null) {
-    return (keccakInstance as Keccak).hex();
-  }
-  return "";
-}

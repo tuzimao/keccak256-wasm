@@ -1,2 +1,7 @@
-// 定义辅助类型
-export type MessageFormat = [Uint8Array | string, bool];
+export class StringMessageFormat {
+    constructor(public data: Uint8Array, public isString: bool) {}
+  }
+  
+  export class Uint8ArrayMessageFormat {
+    constructor(public data: Uint8Array, public isString: bool) {}
+  }

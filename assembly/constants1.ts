@@ -1,25 +1,5 @@
 export const INPUT_ERROR: string = 'input is invalid type';
 export const FINALIZE_ERROR: string = 'finalize already called';
-export const WINDOW: bool = typeof window === 'object';
-export let root: any = WINDOW ? window : {};
-
-// 处理不同的环境变量
-if (root.JS_SHA3_NO_WINDOW) {
-  WINDOW = false;
-}
-
-export const WEB_WORKER: bool = !WINDOW && typeof self === 'object';
-export const NODE_JS: bool = !root.JS_SHA3_NO_NODE_JS && typeof process === 'object' && process.versions && process.versions.node;
-
-if (NODE_JS) {
-  root = global;
-} else if (WEB_WORKER) {
-  root = self;
-}
-
-export const COMMON_JS: bool = !root.JS_SHA3_NO_COMMON_JS && typeof module === 'object' && module.exports;
-export const AMD: bool = typeof define === 'function' && define.amd;
-export const ARRAY_BUFFER: bool = !root.JS_SHA3_NO_ARRAY_BUFFER && typeof ArrayBuffer !== 'undefined';
 
 // 常量定义
 export const HEX_CHARS: string[] = '0123456789abcdef'.split('');

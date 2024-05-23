@@ -1,28 +1,19 @@
-import { INPUT_ERROR, ARRAY_BUFFER, OUTPUT_TYPES, HEX_CHARS, SHAKE_PADDING, CSHAKE_PADDING, KECCAK_PADDING, PADDING, SHIFT, RC, BITS, SHAKE_BITS, CSHAKE_BYTEPAD } from "./constants1";
+import { INPUT_ERROR, FINALIZE_ERROR, HEX_CHARS, KECCAK_PADDING, SHIFT, RC, BITS, OUTPUT_TYPES } from "./constants1";
 import { Keccak } from "./keccak1";
-import { MessageFormat } from "./types";
+import { StringMessageFormat, Uint8ArrayMessageFormat } from "./types";
 
-
-
-export function formatStringMessage(message: string): [Uint8Array, bool] {
+// 格式化消息（字符串）
+export function formatStringMessage(message: string): StringMessageFormat {
   const msg = new Uint8Array(message.length);
   for (let i = 0; i < message.length; i++) {
     msg[i] = message.charCodeAt(i);
   }
-  return [msg, true];
+  return new StringMessageFormat(msg, true);
 }
 
-export function formatUint8ArrayMessage(message: Uint8Array): [Uint8Array, bool] {
-  return [message, false];
-}
-
-export function formatArrayBufferMessage(message: ArrayBuffer): [Uint8Array, bool] {
-  return [new Uint8Array(message), false];
-}
-
-// 判断消息是否为空
-export function empty(message: any): bool {
-  return (formatMessage(message)[0] as Uint8Array).length === 0;
+// 格式化消息（Uint8Array）
+export function formatUint8ArrayMessage(message: Uint8Array): Uint8ArrayMessageFormat {
+  return new Uint8ArrayMessageFormat(message, false);
 }
 
 // 克隆数组
@@ -35,35 +26,16 @@ export function cloneArray(array: Uint32Array): Uint32Array {
 }
 
 // 创建输出方法
-export function createOutputMethod(bits: i32, padding: u32[], outputType: string): (message: any) => any {
-  return (message: any): any => {
-    return new Keccak(bits, padding, bits).update(message)[outputType]();
-  };
-}
-
-// 创建 Shake 输出方法
-export function createShakeOutputMethod(bits: i32, padding: u32[], outputType: string): (message: any, outputBits: i32) => any {
-  return (message: any, outputBits: i32): any => {
-    return new Keccak(bits, padding, outputBits).update(message)[outputType]();
-  };
-}
-
-// 创建 Cshake 输出方法
-export function createCshakeOutputMethod(bits: i32, padding: u32[], outputType: string): (message: any, outputBits: i32, n: string, s: string) => any {
-  return (message: any, outputBits: i32, n: string, s: string): any => {
-    return methods.get('cshake' + bits)!.update(message, outputBits, n, s)[outputType]();
-  };
-}
-
-// 创建 Kmac 输出方法
-export function createKmacOutputMethod(bits: i32, padding: u32[], outputType: string): (key: any, message: any, outputBits: i32, s: string) => any {
-  return (key: any, message: any, outputBits: i32, s: string): any => {
-    return methods.get('kmac' + bits)!.update(key, message, outputBits, s)[outputType]();
+export function createOutputMethod(bits: i32, padding: u32[], outputType: string): (message: string) => string {
+  return (message: string): string => {
+    const keccak = new Keccak(bits, padding, bits);
+    keccak.updateString(message);
+    return keccak[outputType]();
   };
 }
 
 // 创建输出方法集合
-export function createOutputMethods(method: any, createMethod: (bits: i32, padding: u32[], outputType: string) => any, bits: i32, padding: u32[]): any {
+export function createOutputMethods(method: any, createMethod: (bits: i32, padding: u32[], outputType: string) => (message: string) => string, bits: i32, padding: u32[]): any {
   for (let i = 0; i < OUTPUT_TYPES.length; ++i) {
     const type = OUTPUT_TYPES[i];
     method[type] = createMethod(bits, padding, type);
@@ -73,65 +45,29 @@ export function createOutputMethods(method: any, createMethod: (bits: i32, paddi
 
 // 创建方法
 export function createMethod(bits: i32, padding: u32[]): any {
-  const method = createOutputMethod(bits, padding, 'hex');
+  const method: any = createOutputMethod(bits, padding, 'hex');
   method.create = (): Keccak => {
     return new Keccak(bits, padding, bits);
   };
-  method.update = (message: any): any => {
-    return method.create().update(message);
+  method.update = (message: string): any => {
+    return method.create().updateString(message);
   };
   return createOutputMethods(method, createOutputMethod, bits, padding);
 }
 
-// 创建 Shake 方法
-export function createShakeMethod(bits: i32, padding: u32[]): any {
-  const method = createShakeOutputMethod(bits, padding, 'hex');
-  method.create = (outputBits: i32): Keccak => {
-    return new Keccak(bits, padding, outputBits);
-  };
-  method.update = (message: any, outputBits: i32): any => {
-    return method.create(outputBits).update(message);
-  };
-  return createOutputMethods(method, createShakeOutputMethod, bits, padding);
-}
-
-// 创建 Cshake 方法
-export function createCshakeMethod(bits: i32, padding: u32[]): any {
-  const w = CSHAKE_BYTEPAD.get(bits.toString())!;
-  const method = createCshakeOutputMethod(bits, padding, 'hex');
-  method.create = (outputBits: i32, n: string, s: string): Keccak => {
-    if (empty(n) && empty(s)) {
-      return methods.get('shake' + bits)!.create(outputBits);
-    } else {
-      return new Keccak(bits, padding, outputBits).bytepad([n, s], w);
-    }
-  };
-  method.update = (message: any, outputBits: i32, n: string, s: string): any => {
-    return method.create(outputBits, n, s).update(message);
-  };
-  return createOutputMethods(method, createCshakeOutputMethod, bits, padding);
-}
-
-// 创建 Kmac 方法
-export function createKmacMethod(bits: i32, padding: u32[]): any {
-  const w = CSHAKE_BYTEPAD.get(bits.toString())!;
-  const method = createKmacOutputMethod(bits, padding, 'hex');
-  method.create = (key: any, outputBits: i32, s: string): any => {
-    return new Kmac(bits, padding, outputBits).bytepad(['KMAC', s], w).bytepad([key], w);
-  };
-  method.update = (key: any, message: any, outputBits: i32, s: string): any => {
-    return method.create(key, outputBits, s).update(message);
-  };
-  return createOutputMethods(method, createKmacOutputMethod, bits, padding);
+// 定义算法集合类型
+class Algorithm {
+  constructor(
+    public name: string,
+    public padding: u32[],
+    public bits: u32[],
+    public createMethod: (bits: i32, padding: u32[]) => any
+  ) {}
 }
 
 // 定义算法集合
-export const algorithms = [
-  { name: 'keccak', padding: KECCAK_PADDING, bits: BITS, createMethod: createMethod },
-  { name: 'sha3', padding: PADDING, bits: BITS, createMethod: createMethod },
-  { name: 'shake', padding: SHAKE_PADDING, bits: SHAKE_BITS, createMethod: createShakeMethod },
-  { name: 'cshake', padding: CSHAKE_PADDING, bits: SHAKE_BITS, createMethod: createCshakeMethod },
-  { name: 'kmac', padding: CSHAKE_PADDING, bits: SHAKE_BITS, createMethod: createKmacMethod }
+export const algorithms: Algorithm[] = [
+  new Algorithm('keccak', KECCAK_PADDING, BITS, createMethod)
 ];
 
 // 初始化方法和方法名
