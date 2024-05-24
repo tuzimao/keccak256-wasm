@@ -48,7 +48,7 @@ class Keccak {
       this.s[i] = 0;
     }
   }
-  keccak256(message: string): string {
+  keccak_256(message: string): string {
     this.updateString(message);
     return this.hex();
   }
@@ -561,9 +561,10 @@ class Keccak {
   }
 }
 
-export function createKeccak256(message: string): string {
-  const keccak = new Keccak(256, KECCAK_PADDING, 256);
-  keccak.updateString(message);
-  return keccak.hex();  // 假设 hex 是 Keccak 类中的一个方法
+export function keccak_256(message: string): string {
+  let keccakInstance = new Keccak(256, KECCAK_PADDING, 256);
+  keccakInstance.keccak_256(message);
+  return keccakInstance.hex();
 }
+
 

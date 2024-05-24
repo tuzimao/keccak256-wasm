@@ -17,10 +17,10 @@ async function instantiate(module, imports = {}) {
   const { exports } = await WebAssembly.instantiate(module, adaptedImports);
   const memory = exports.memory || imports.env.memory;
   const adaptedExports = Object.setPrototypeOf({
-    createKeccak256(message) {
-      // assembly/keccak1/createKeccak256(~lib/string/String) => ~lib/string/String
+    keccak_256(message) {
+      // assembly/keccak1/keccak_256(~lib/string/String) => ~lib/string/String
       message = __lowerString(message) || __notnull();
-      return __liftString(exports.createKeccak256(message) >>> 0);
+      return __liftString(exports.keccak_256(message) >>> 0);
     },
   }, exports);
   function __liftString(pointer) {
@@ -50,7 +50,7 @@ async function instantiate(module, imports = {}) {
 }
 export const {
   memory,
-  createKeccak256,
+  keccak_256,
 } = await (async url => instantiate(
   await (async () => {
     try { return await globalThis.WebAssembly.compileStreaming(globalThis.fetch(url)); }

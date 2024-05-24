@@ -16,7 +16,11 @@
 
     async function loadWasmModule() {
       try {
+        console.log("Fetching WASM module...");
         const response = await fetch("build/keccak.wasm");
+        if (!response.ok) {
+          throw new Error(`HTTP status code is not ok: ${response.status}`);
+        }
         console.log("WASM module fetched:", response);
         const wasmModule = await loader.instantiateStreaming(response);
         console.log("WASM module instantiated:", wasmModule);
@@ -26,45 +30,32 @@
       }
     }
 
-    class KeccakWrapper {
-      constructor(bits) {
-        this.bits = bits;
-        this.instance = null;
-      }
-
-      async initialize() {
-        this.instance = await loadWasmModule();
-        if (this.instance) {
-          this.instance.createKeccak(this.bits);
-        }
-      }
-
-      update(message) {
-        if (this.instance) {
-          const messagePtr = this.instance.__pin(this.instance.__newString(message));
-          this.instance.updateKeccakWithString(messagePtr);
-          this.instance.__unpin(messagePtr);
-        }
-      }
-
-      finalize() {
-        if (this.instance) {
-          this.instance.finalizeKeccak();
-          const hexPtr = this.instance.keccakToHex();
-          const hex = this.instance.__getString(hexPtr);
-          return hex;
-        }
-        return "";
-      }
-    }
-
     async function computeHash() {
-      const message = document.getElementById("inputMessage").value;
-      const keccak = new KeccakWrapper(256);
-      await keccak.initialize();
-      keccak.update(message);
-      const hash = keccak.finalize();
-      document.getElementById("result").textContent = "Keccak-256 Hash: " + hash;
+      try {
+        console.log("Loading WASM module...");
+        const wasmExports = await loadWasmModule();
+        if (!wasmExports) {
+          throw new Error("WASM module not loaded");
+        }
+        console.log("WASM module loaded:", wasmExports);
+
+        const message = document.getElementById("inputMessage").value;
+        console.log("Message to hash:", message);
+
+        const messagePtr = wasmExports.__pin(wasmExports.__newString(message));
+        console.log("Message pointer:", messagePtr);
+
+        const hashPtr = wasmExports.keccak_256(messagePtr);
+        console.log("Hash pointer:", hashPtr);
+
+        const hash = wasmExports.__getString(hashPtr);
+        console.log("Computed hash:", hash);
+
+        wasmExports.__unpin(messagePtr);
+        document.getElementById("result").textContent = "Keccak-256 Hash: " + hash;
+      } catch (error) {
+        console.error("Error computing hash:", error);
+      }
     }
 
     document.getElementById("computeHashButton").addEventListener("click", computeHash);
