@@ -1,4 +1,4 @@
-const { keccak_256 } = require('./keccak.cjs');
+const { keccak_256 } = require('./keccak_wrapper.cjs');
 
 function testKeccak256() {
   const message = '12345';

@@ -1,11 +1,8 @@
 (function () {
   'use strict';
 
-
-  var AMD = typeof define === 'function' && define.amd;
   var HEX_CHARS = '0123456789abcdef'.split('');
   var KECCAK_PADDING = [1, 256, 65536, 16777216];
-  var PADDING = [6, 1536, 393216, 100663296];
   var SHIFT = [0, 8, 16, 24];
   var RC = [1, 0, 32898, 0, 32906, 2147483648, 2147516416, 2147483648, 32907, 0, 2147483649,
     0, 2147516545, 2147483648, 32777, 2147483648, 138, 0, 136, 0, 2147516425, 0,
@@ -14,7 +11,6 @@
     2147516545, 2147483648, 32896, 2147483648, 2147483649, 0, 2147516424, 2147483648];
   var BITS = [224, 256, 384, 512];
   var OUTPUT_TYPES = ['hex', 'buffer', 'arrayBuffer', 'array', 'digest'];
-
 
   // [message: string, isString: bool]
   var formatMessage = function (message) {
@@ -34,10 +30,6 @@
     return [message, false];
   }
 
-  var empty = function (message) {
-    return formatMessage(message)[0].length === 0;
-  };
-
   var cloneArray = function (array) {
     var newArray = [];
     for (var i = 0; i < array.length; ++i) {
@@ -52,15 +44,6 @@
     };
   };
 
-
-  var createOutputMethods = function (method, createMethod, bits, padding) {
-    for (var i = 0; i < OUTPUT_TYPES.length; ++i) {
-      var type = OUTPUT_TYPES[i];
-      method[type] = createMethod(bits, padding, type);
-    }
-    return method;
-  };
-
   var createMethod = function (bits, padding) {
     var method = createOutputMethod(bits, padding, 'hex');
     method.create = function () {
@@ -69,13 +52,13 @@
     method.update = function (message) {
       return method.create().update(message);
     };
-    return createOutputMethods(method, createOutputMethod, bits, padding);
+    return method;
   };
+  
 
 
   var algorithms = [
-    { name: 'keccak', padding: KECCAK_PADDING, bits: BITS, createMethod: createMethod },
-    { name: 'sha3', padding: PADDING, bits: BITS, createMethod: createMethod },
+    { name: 'keccak', padding: KECCAK_PADDING, bits: [256], createMethod: createMethod },
   ];
 
   var methods = {}, methodNames = [];
@@ -87,11 +70,6 @@
       var methodName = algorithm.name + '_' + bits[j];
       methodNames.push(methodName);
       methods[methodName] = algorithm.createMethod(bits[j], algorithm.padding);
-      if (algorithm.name !== 'sha3') {
-        var newMethodName = algorithm.name + bits[j];
-        methodNames.push(newMethodName);
-        methods[newMethodName] = methods[methodName];
-      }
     }
   }
 
@@ -545,23 +523,11 @@
       s[1] ^= RC[n + 1];
     }
   };
-  if (COMMON_JS) {
+  
     module.exports = {
-      keccak_224: methods.keccak_224,
       keccak_256: methods.keccak_256,
-      keccak_384: methods.keccak_384,
-      keccak_512: methods.keccak_512,
     };
-  } else {
-    for (i = 0; i < methodNames.length; ++i) {
-      root[methodNames[i]] = methods[methodNames[i]];
-    }
-    if (AMD) {
-      define(function () {
-        return methods;
-      });
-    }
-  }
+
   
   })();
   
