@@ -2,8 +2,6 @@ import {
     INPUT_ERROR,
     FINALIZE_ERROR,
     HEX_CHARS,
-    SHAKE_PADDING,
-    CSHAKE_PADDING,
     KECCAK_PADDING,
     PADDING,
     SHIFT,
@@ -11,13 +9,10 @@ import {
     BITS,
     SHAKE_BITS,
     OUTPUT_TYPES,
-    CSHAKE_BYTEPAD
   } from "./constants1";
 
   import {
-    formatStringMessage,formatUint8ArrayMessage,formatArrayBufferMessage, cloneArray, createOutputMethod, createShakeOutputMethod,
-    createOutputMethods, createMethod,
-    createShakeMethod, algorithms, methods, methodNames
+    formatStringMessage,formatUint8ArrayMessage, cloneArray,
   } from "./method1";
 
 class Keccak {
@@ -63,7 +58,8 @@ class Keccak {
       throw new Error(FINALIZE_ERROR);
     }
 
-    const msg = formatStringMessage(message);
+    const result = formatStringMessage(message);
+    const msg = result.data;  // 获取 Uint8Array 数据
     const blocks = this.blocks;
     const byteCount = this.byteCount;
     const length = msg.length;
@@ -109,7 +105,7 @@ class Keccak {
         for (i = 0; i < blockCount; ++i) {
           s[i] ^= blocks[i];
         }
-        f(s);
+        this.f(s);
         this.reset = true;
       } else {
         this.start = i;
@@ -273,7 +269,7 @@ class Keccak {
       }
       if (j % blockCount === 0) {
         s = cloneArray(s);
-        f(s);
+        this.f(s);
         i = 0;
       }
     }
@@ -353,7 +349,7 @@ class Keccak {
       }
       if (j % blockCount === 0) {
         s = cloneArray(s);
-        f(s);
+        this.f(s);
       }
     }
     if (extraBytes > 0) {
@@ -565,9 +561,9 @@ class Keccak {
   }
 }
 
-export let keccak: Keccak | null = null;
-export function keccak_256(message: string): string {
+export function createKeccak256(message: string): string {
   const keccak = new Keccak(256, KECCAK_PADDING, 256);
-  return keccak.keccak256(message);
+  keccak.updateString(message);
+  return keccak.hex();  // 假设 hex 是 Keccak 类中的一个方法
 }
 

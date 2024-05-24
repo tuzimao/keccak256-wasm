@@ -4,9 +4,7 @@ export const FINALIZE_ERROR: string = 'finalize already called';
 // 常量定义
 export const HEX_CHARS: string[] = '0123456789abcdef'.split('');
 
-export const SHAKE_PADDING: u32[] = [31, 7936, 2031616, 520093696];
-export const CSHAKE_PADDING: u32[] = [4, 1024, 262144, 67108864];
-export const KECCAK_PADDING: u32[] = [1, 256, 65536, 16777216];
+export const KECCAK_PADDING: StaticArray<u32> = [1, 256, 65536, 16777216];
 export const PADDING: u32[] = [6, 1536, 393216, 100663296];
 export const SHIFT: u32[] = [0, 8, 16, 24];
 export const RC: u32[] = [
@@ -19,7 +17,4 @@ export const RC: u32[] = [
 export const BITS: u32[] = [224, 256, 384, 512];
 export const SHAKE_BITS: u32[] = [128, 256];
 export const OUTPUT_TYPES: string[] = ['hex', 'buffer', 'arrayBuffer', 'array', 'digest'];
-export const CSHAKE_BYTEPAD: Map<string, u32> = new Map<string, u32>([
-  ['128', 168],
-  ['256', 136]
-]);
+
