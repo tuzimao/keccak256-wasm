@@ -19,18 +19,18 @@ class Keccak {
   private blocks: Uint32Array;
   private s: Uint32Array;
   private padding: StaticArray<u32>;
-  private outputBits: i32;
+  private outputBits: u32;
   private reset: bool;
   private finalized: bool;
-  private block: i32;
-  private start: i32;
-  private blockCount: i32;
-  private byteCount: i32;
-  private outputBlocks: i32;
-  private extraBytes: i32;
-  private lastByteIndex: i32;
+  private block: u32;
+  private start: u32;
+  private blockCount: u32;
+  private byteCount: u32;
+  private outputBlocks: u32;
+  private extraBytes: u32;
+  private lastByteIndex: u32;
 
-  constructor(bits: i32, padding: StaticArray<u32>, outputBits: i32) {
+  constructor(bits: u32, padding: StaticArray<u32>, outputBits: u32) {
     this.blocks = new Uint32Array(50);
     this.s = new Uint32Array(50);
     this.padding = padding;
@@ -66,8 +66,8 @@ class Keccak {
     const blockCount = this.blockCount;
     let index = 0;
     let s = this.s;
-    let i: i32;
-    let code: i32;
+    let i: u32;
+    let code: u32;
 
     while (index < length) {
       if (this.reset) {
@@ -125,7 +125,7 @@ class Keccak {
     const blockCount = this.blockCount;
     let index = 0;
     let s = this.s;
-    let i: i32;
+    let i: u32;
 
     while (index < length) {
       if (this.reset) {
@@ -156,7 +156,7 @@ class Keccak {
     return this;
   }
 
-  encode(x: i32, right: bool): i32 {
+  encode(x: u32, right: bool): u32 {
     let o = x & 255;
     let n = 1;
     let bytes: u8[] = [o];
@@ -187,7 +187,7 @@ class Keccak {
     return bytes.length;
   }
 
-  encodeString(str: string): i32 {
+  encodeString(str: string): u32 {
     const result = formatStringMessage(str);
     const msg = result[0];
     const isString = result[1];
@@ -218,7 +218,7 @@ class Keccak {
   }
 
   bytepad(strs: Array<string>, w: u32): Keccak {
-    let bytes = this.encode(w as i32, false);
+    let bytes = this.encode(w as u32, false);
     for (let i = 0; i < strs.length; ++i) {
       bytes += this.encodeString(strs[i]);
     }
@@ -255,7 +255,7 @@ class Keccak {
     let s = this.s;
     let outputBlocks = this.outputBlocks;
     let extraBytes = this.extraBytes;
-    let i = 0, j = 0;
+    let i:u32 = 0, j:u32 = 0;
     let hex = '';
     let block: u32;
 
@@ -336,7 +336,7 @@ class Keccak {
     let extraBytes = this.extraBytes;
     let i = 0, j = 0;
     let array: u8[] = [];
-    let offset: i32, block: u32;
+    let offset: u32, block: u32;
 
     while (j < outputBlocks) {
       for (i = 0; i < blockCount && j < outputBlocks; ++i, ++j) {
