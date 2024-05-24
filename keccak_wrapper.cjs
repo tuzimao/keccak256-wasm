@@ -9,25 +9,13 @@
     2147483658, 0, 2147516555, 0, 139, 2147483648, 32905, 2147483648, 32771,
     2147483648, 32770, 2147483648, 128, 2147483648, 32778, 0, 2147483658, 2147483648,
     2147516545, 2147483648, 32896, 2147483648, 2147483649, 0, 2147516424, 2147483648];
-  var BITS = [224, 256, 384, 512];
-  var OUTPUT_TYPES = ['hex', 'buffer', 'arrayBuffer', 'array', 'digest'];
 
   // [message: string, isString: bool]
   var formatMessage = function (message) {
     var type = typeof message;
     if (type === 'string') {
       return [message, true];
-    }
-    if (type !== 'object' || message === null) {
-      throw new Error(INPUT_ERROR);
-    }
-    if (ARRAY_BUFFER && message.constructor === ArrayBuffer) {
-      return [new Uint8Array(message), false];
-    }
-    if (!isArray(message) && !isView(message)) {
-      throw new Error(INPUT_ERROR);
-    }
-    return [message, false];
+    }else return [message, false];
   }
 
   var cloneArray = function (array) {
