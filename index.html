@@ -10,6 +10,7 @@
   <input type="text" id="inputMessage" placeholder="Enter a message" />
   <button id="computeHashButton">Compute Keccak-256 Hash</button>
   <p id="result"></p>
+  <p id="blocks"></p>
 
   <script type="module">
     import * as loader from "https://unpkg.com/@assemblyscript/loader/index.js";
@@ -48,11 +49,14 @@
         const hashPtr = wasmExports.keccak_256(messagePtr);
         console.log("Hash pointer:", hashPtr);
 
+        const blocks = wasmExports.getBlocks();
+
         const hash = wasmExports.__getString(hashPtr);
         console.log("Computed hash:", hash);
 
         wasmExports.__unpin(messagePtr);
         document.getElementById("result").textContent = "Keccak-256 Hash: " + hash;
+        document.getElementById("blocks").textContent = "Blocks: " + blocks;
       } catch (error) {
         console.error("Error computing hash:", error);
       }

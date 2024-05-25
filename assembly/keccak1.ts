@@ -16,13 +16,13 @@ import {
   } from "./method1";
 
 class Keccak {
-  private blocks: Uint32Array;
+  public blocks: Uint32Array;
   private s: Uint32Array;
   private padding: StaticArray<u32>;
   private outputBits: u32;
   private reset: bool;
   private finalized: bool;
-  private block: u32;
+  public block: u32;
   private start: u32;
   private blockCount: u32;
   private byteCount: u32;
@@ -59,7 +59,7 @@ class Keccak {
     }
 
     const result = formatStringMessage(message);
-    const msg = result.data;  // 获取 Uint8Array 数据
+    const msg:Uint8Array = result.data;  // 获取 Uint8Array 数据
     const blocks = this.blocks;
     const byteCount = this.byteCount;
     const length = msg.length;
@@ -113,6 +113,7 @@ class Keccak {
     }
     return this;
   }
+
 
   updateUint8Array(message: Uint8Array): Keccak {
     if (this.finalized) {
@@ -566,5 +567,11 @@ export function keccak_256(message: string): string {
   keccakInstance.keccak_256(message);
   return keccakInstance.hex();
 }
+
+export function getBlocks(): Uint32Array {
+  let keccakInstance = new Keccak(256, KECCAK_PADDING, 256);
+  return keccakInstance.blocks;
+}
+
 
 

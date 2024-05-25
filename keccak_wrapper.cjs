@@ -90,6 +90,8 @@
     var blocks = this.blocks, byteCount = this.byteCount, length = message.length,
       blockCount = this.blockCount, index = 0, s = this.s, i, code;
 
+    console.log("Initial message:", message);
+
     while (index < length) {
       if (this.reset) {
         this.reset = false;
@@ -123,6 +125,10 @@
           blocks[i >> 2] |= message[index] << SHIFT[i++ & 3];
         }
       }
+
+      console.log("Blocks:", blocks);
+
+
       this.lastByteIndex = i;
       if (i >= byteCount) {
         this.start = i - byteCount;
@@ -135,6 +141,7 @@
       } else {
         this.start = i;
       }
+      console.log("endBlocks:", blocks);
     }
     return this;
   };
@@ -215,6 +222,7 @@
     for (i = 0; i < blockCount; ++i) {
       s[i] ^= blocks[i];
     }
+    console.log("Finial Blocks:", blocks);
     f(s);
   };
 
@@ -514,6 +522,8 @@
   
     module.exports = {
       keccak_256: methods.keccak_256,
+      update: Keccak.prototype.update,
+      Keccak: Keccak
     };
 
   
