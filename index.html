@@ -17,6 +17,9 @@
   <p id="testblocks1"></p>
   <p id="testblocks2"></p>
   <p id="finalState"></p>
+  <p id="debugBlockCount"></p>
+  <p id="debugByteCount"></p>
+  <p id="testblocks0"></p>
 
   <script type="module">
     import * as loader from "https://unpkg.com/@assemblyscript/loader/index.js";
@@ -58,19 +61,24 @@
         const blocksPtr = wasmExports.getBlocks();
         const formattedMessagePtr = wasmExports.testFormatStringMessage(messagePtr);
         const updateStringBlocksPtr = wasmExports.testUpdateString(messagePtr);
-        const testblocks1Prt = wasmExports.testblocks1(messagePtr);
-        const testblocks2Prt = wasmExports.testblocks2(messagePtr);
+        const testblocks1Ptr = wasmExports.testblocks1(messagePtr);
+        const testblocks2Ptr = wasmExports.testblocks2(messagePtr);
         const finalStatePtr = wasmExports.testFinalize(messagePtr);
+        const debugBlockCount = wasmExports.debug_blockCount(messagePtr);
+        const debugByteCount = wasmExports.debug_byteCount(messagePtr);
+        const testblocks0Ptr = wasmExports.testblocks0(messagePtr);
 
         const hash = wasmExports.__getString(hashPtr);
         console.log("Computed hash:", hash);
 
+        // Get arrays
         const blocks = wasmExports.__getArray(blocksPtr);
         const formattedMessage = wasmExports.__getArray(formattedMessagePtr);
         const updateStringBlocks = wasmExports.__getArray(updateStringBlocksPtr);
-        const testblocks1 = wasmExports.__getArray(testblocks1Prt);
-        const testblocks2 = wasmExports.__getArray(testblocks2Prt);
+        const testblocks1 = wasmExports.__getArray(testblocks1Ptr);
+        const testblocks2 = wasmExports.__getArray(testblocks2Ptr);
         const finalState = wasmExports.__getArray(finalStatePtr);
+        const testblocks0 = wasmExports.__getArray(testblocks0Ptr);
 
         wasmExports.__unpin(messagePtr);
 
@@ -81,6 +89,9 @@
         document.getElementById("testblocks1").textContent = "Update testblocks1 " + testblocks1;
         document.getElementById("testblocks2").textContent = "Update testblocks2 " + testblocks2;
         document.getElementById("finalState").textContent = "Final State: " + finalState;
+        document.getElementById("debugBlockCount").textContent = "Debug Block Count: " + debugBlockCount;
+        document.getElementById("debugByteCount").textContent = "Debug Byte Count: " + debugByteCount;
+        document.getElementById("testblocks0").textContent = "Test Blocks 0: " + testblocks0;
       } catch (error) {
         console.error("Error computing hash:", error);
       }
