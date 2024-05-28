@@ -50,7 +50,7 @@
         console.log("Hash pointer:", hashPtr);
 
         const blocks = wasmExports.getBlocks();
-
+        console.log("Blocks:", blocks);
         const hash = wasmExports.__getString(hashPtr);
         console.log("Computed hash:", hash);
 

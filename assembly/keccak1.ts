@@ -29,7 +29,7 @@ class Keccak {
   private outputBlocks: u32;
   private extraBytes: u32;
   private lastByteIndex: u32;
-  public result: u32;
+  
 
   constructor(bits: u32, padding: StaticArray<u32>, outputBits: u32) {
     this.blocks = new Uint32Array(50);
@@ -59,8 +59,7 @@ class Keccak {
       throw new Error(FINALIZE_ERROR);
     }
 
-    this.result = formatStringMessage(message);
-    const msg:Uint8Array = this.result.data;  // 获取 Uint8Array 数据
+    const msg = formatStringMessage(message);
     const blocks = this.blocks;
     const byteCount = this.byteCount;
     const length = msg.length;
@@ -574,9 +573,5 @@ export function getBlocks(): Uint32Array {
   return keccakInstance.blocks;
 }
 
-export function getResult(): Uint32Array {
-  let keccakInstance = new Keccak(256, KECCAK_PADDING, 256);
-  return keccakInstance.result;
-}
 
 
