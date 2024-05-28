@@ -12,8 +12,11 @@ import {
 
 class Keccak {
   public blocks: Uint32Array;
+  public debug_blocks0: Uint32Array;
   public debug_blocks1: Uint32Array;
   public debug_blocks2: Uint32Array;
+  public debug_byteCount: u32;
+  public debug_blockCount: u32;
   public s: Uint32Array;
   private padding: StaticArray<u32>;
   private outputBits: u32;
@@ -30,8 +33,11 @@ class Keccak {
 
   constructor(bits: u32, padding: StaticArray<u32>, outputBits: u32) {
     this.blocks = new Uint32Array(50);
+    this.debug_blocks0 = new Uint32Array(50);
     this.debug_blocks1 = new Uint32Array(50);
     this.debug_blocks2 = new Uint32Array(50);
+    this.debug_byteCount = 0;
+    this.debug_blockCount = 0;
     this.s = new Uint32Array(50);
     this.padding = padding;
     this.outputBits = outputBits;
@@ -67,6 +73,11 @@ class Keccak {
     let s = this.s;
     let i: u32;
     let code: u32;
+
+    this.debug_blocks0 = cloneArray(blocks);
+    this.debug_byteCount = byteCount;
+    this.debug_blockCount = blockCount;
+
 
     while (index < length) {
       if (this.reset) {
@@ -431,6 +442,26 @@ export function testUpdateString(message: string): Uint32Array {
   keccakInstance.updateString(message);
   return keccakInstance.blocks;
 }
+
+export function debug_blockCount(message: string): u32 {
+  let keccakInstance = new Keccak(256, KECCAK_PADDING, 256);
+  keccakInstance.updateString(message);
+  return keccakInstance.debug_blockCount;
+}
+
+export function debug_byteCount(message: string): u32 {
+  let keccakInstance = new Keccak(256, KECCAK_PADDING, 256);
+  keccakInstance.updateString(message);
+  return keccakInstance.debug_byteCount;
+}
+
+
+export function testblocks0(message: string): Uint32Array {
+  let keccakInstance = new Keccak(256, KECCAK_PADDING, 256);
+  keccakInstance.updateString(message);
+  return keccakInstance.debug_blocks1;
+}
+
 
 export function testblocks1(message: string): Uint32Array {
   let keccakInstance = new Keccak(256, KECCAK_PADDING, 256);
