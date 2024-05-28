@@ -11,7 +11,12 @@
   <button id="computeHashButton">Compute Keccak-256 Hash</button>
   <p id="result"></p>
   <p id="blocks"></p>
-  <p id="msg"></p> <!-- Added for displaying the formatted message -->
+  <p id="formattedMessage"></p>
+  <p id="updateStringBlocks"></p>
+  <p id="updateStringEndBlocks"></p>
+  <p id="testblocks1"></p>
+  <p id="testblocks2"></p>
+  <p id="finalState"></p>
 
   <script type="module">
     import * as loader from "https://unpkg.com/@assemblyscript/loader/index.js";
@@ -50,20 +55,32 @@
         const hashPtr = wasmExports.keccak_256(messagePtr);
         console.log("Hash pointer:", hashPtr);
 
-        const blocks = wasmExports.getBlocks();
-        console.log("Blocks:", blocks);
-
-        const msgPtr = wasmExports.testFormatStringMessage(messagePtr);
-        const formattedMsg = wasmExports.__getArray(msgPtr);
-        console.log("Formatted message:", formattedMsg);
+        const blocksPtr = wasmExports.getBlocks();
+        const formattedMessagePtr = wasmExports.testFormatStringMessage(messagePtr);
+        const updateStringBlocksPtr = wasmExports.testUpdateString(messagePtr);
+        const testblocks1Prt = wasmExports.testblocks1(messagePtr);
+        const testblocks2Prt = wasmExports.testblocks2(messagePtr);
+        const finalStatePtr = wasmExports.testFinalize(messagePtr);
 
         const hash = wasmExports.__getString(hashPtr);
         console.log("Computed hash:", hash);
 
+        const blocks = wasmExports.__getArray(blocksPtr);
+        const formattedMessage = wasmExports.__getArray(formattedMessagePtr);
+        const updateStringBlocks = wasmExports.__getArray(updateStringBlocksPtr);
+        const testblocks1 = wasmExports.__getArray(testblocks1Prt);
+        const testblocks2 = wasmExports.__getArray(testblocks2Prt);
+        const finalState = wasmExports.__getArray(finalStatePtr);
+
         wasmExports.__unpin(messagePtr);
+
         document.getElementById("result").textContent = "Keccak-256 Hash: " + hash;
         document.getElementById("blocks").textContent = "Blocks: " + blocks;
-        document.getElementById("msg").textContent = "Formatted message: " + formattedMsg;
+        document.getElementById("formattedMessage").textContent = "Formatted message: " + formattedMessage;
+        document.getElementById("updateStringBlocks").textContent = "Update String Blocks: " + updateStringBlocks;
+        document.getElementById("testblocks1").textContent = "Update testblocks1 " + testblocks1;
+        document.getElementById("testblocks2").textContent = "Update testblocks2 " + testblocks2;
+        document.getElementById("finalState").textContent = "Final State: " + finalState;
       } catch (error) {
         console.error("Error computing hash:", error);
       }

@@ -12,7 +12,9 @@ import {
 
 class Keccak {
   public blocks: Uint32Array;
-  private s: Uint32Array;
+  public debug_blocks1: Uint32Array;
+  public debug_blocks2: Uint32Array;
+  public s: Uint32Array;
   private padding: StaticArray<u32>;
   private outputBits: u32;
   private reset: bool;
@@ -28,6 +30,8 @@ class Keccak {
 
   constructor(bits: u32, padding: StaticArray<u32>, outputBits: u32) {
     this.blocks = new Uint32Array(50);
+    this.debug_blocks1 = new Uint32Array(50);
+    this.debug_blocks2 = new Uint32Array(50);
     this.s = new Uint32Array(50);
     this.padding = padding;
     this.outputBits = outputBits;
@@ -92,7 +96,7 @@ class Keccak {
           blocks[i >> 2] |= (0x80 | (code & 0x3f)) << SHIFT[i & 3];
         }
       }
-
+      this.debug_blocks1 = cloneArray(blocks);
       this.lastByteIndex = i;
       if (i >= byteCount) {
         this.start = i - byteCount;
@@ -106,6 +110,7 @@ class Keccak {
         this.start = i;
       }
     }
+    this.debug_blocks2 = cloneArray(blocks);
     return this;
   }
 
@@ -419,5 +424,30 @@ export function getBlocks(): Uint32Array {
 
 export function testFormatStringMessage(message: string): Uint32Array {
   return formatStringMessage(message);
+}
+
+export function testUpdateString(message: string): Uint32Array {
+  let keccakInstance = new Keccak(256, KECCAK_PADDING, 256);
+  keccakInstance.updateString(message);
+  return keccakInstance.blocks;
+}
+
+export function testblocks1(message: string): Uint32Array {
+  let keccakInstance = new Keccak(256, KECCAK_PADDING, 256);
+  keccakInstance.updateString(message);
+  return keccakInstance.debug_blocks1;
+}
+
+export function testblocks2(message: string): Uint32Array {
+  let keccakInstance = new Keccak(256, KECCAK_PADDING, 256);
+  keccakInstance.updateString(message);
+  return keccakInstance.debug_blocks2;
+}
+
+export function testFinalize(message: string): Uint32Array {
+  let keccakInstance = new Keccak(256, KECCAK_PADDING, 256);
+  keccakInstance.updateString(message);
+  keccakInstance.finalize();
+  return keccakInstance.s;
 }
 
