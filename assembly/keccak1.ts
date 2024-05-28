@@ -1,14 +1,9 @@
 import {
-    INPUT_ERROR,
     FINALIZE_ERROR,
     HEX_CHARS,
     KECCAK_PADDING,
-    PADDING,
     SHIFT,
     RC,
-    BITS,
-    SHAKE_BITS,
-    OUTPUT_TYPES,
   } from "./constants1";
 
   import {
@@ -157,78 +152,6 @@ class Keccak {
     return this;
   }
 
-  encode(x: u32, right: bool): u32 {
-    let o = x & 255;
-    let n = 1;
-    let bytes: u8[] = [o];
-    x = x >> 8;
-    o = x & 255;
-
-    while (o > 0) {
-      // 使用新的数组存储字节
-      let newBytes: u8[] = [o];
-      newBytes.push(...bytes);
-      bytes = newBytes;
-
-      x = x >> 8;
-      o = x & 255;
-      ++n;
-    }
-
-    if (right) {
-      bytes.push(n);
-    } else {
-      // 使用新的数组存储长度
-      let newBytes: u8[] = [n];
-      newBytes.push(...bytes);
-      bytes = newBytes;
-    }
-
-    this.updateUint8Array(new Uint8Array(bytes));
-    return bytes.length;
-  }
-
-  encodeString(str: string): u32 {
-    const result = formatStringMessage(str);
-    const msg = result[0];
-    const isString = result[1];
-    let bytes = 0;
-    const length = msg.length;
-
-    if (isString) {
-      for (let i = 0; i < msg.length; ++i) {
-        let code = msg[i];
-        if (code < 0x80) {
-          bytes += 1;
-        } else if (code < 0x800) {
-          bytes += 2;
-        } else if (code < 0xd800 || code >= 0xe000) {
-          bytes += 3;
-        } else {
-          code = 0x10000 + (((code & 0x3ff) << 10) | (msg[++i] & 0x3ff));
-          bytes += 4;
-        }
-      }
-    } else {
-      bytes = length;
-    }
-
-    bytes += this.encode(bytes * 8, false);
-    this.updateUint8Array(msg);
-    return bytes;
-  }
-
-  bytepad(strs: Array<string>, w: u32): Keccak {
-    let bytes = this.encode(w as u32, false);
-    for (let i = 0; i < strs.length; ++i) {
-      bytes += this.encodeString(strs[i]);
-    }
-    let paddingBytes = (w - bytes % w) % w;
-    let zeros = new Uint8Array(paddingBytes);
-    this.updateUint8Array(zeros);
-    return this;
-  }
-
   finalize(): void {
     if (this.finalized) {
       return;
@@ -287,85 +210,6 @@ class Keccak {
     return hex;
   }
 
-  arrayBuffer(): ArrayBuffer {
-    this.finalize();
-
-    let blockCount = this.blockCount;
-    let s = this.s;
-    let outputBlocks = this.outputBlocks;
-    let extraBytes = this.extraBytes;
-    let i = 0, j = 0;
-    let bytes = this.outputBits >> 3;
-    let buffer: ArrayBuffer;
-    
-    if (extraBytes > 0) {
-      buffer = new ArrayBuffer((outputBlocks + 1) << 2);
-    } else {
-      buffer = new ArrayBuffer(bytes);
-    }
-    
-    let array = new Uint32Array(buffer);
-    
-    while (j < outputBlocks) {
-      for (i = 0; i < blockCount && j < outputBlocks; ++i, ++j) {
-        array[j] = s[i];
-      }
-      if (j % blockCount === 0) {
-        s = cloneArray(s);
-        f(s);
-      }
-    }
-    
-    if (extraBytes > 0) {
-      array[j] = s[i];
-      buffer = buffer.slice(0, bytes);
-    }
-    
-    return buffer;
-  }
-
-  buffer(): ArrayBuffer {
-    return this.arrayBuffer();
-  }
-
-  array(): u8[] {
-    this.finalize();
-
-    let blockCount = this.blockCount;
-    let s = this.s;
-    let outputBlocks = this.outputBlocks;
-    let extraBytes = this.extraBytes;
-    let i = 0, j = 0;
-    let array: u8[] = [];
-    let offset: u32, block: u32;
-
-    while (j < outputBlocks) {
-      for (i = 0; i < blockCount && j < outputBlocks; ++i, ++j) {
-        offset = j << 2;
-        block = s[i];
-        array[offset] = <u8>(block & 0xFF);
-        array[offset + 1] = <u8>((block >> 8) & 0xFF);
-        array[offset + 2] = <u8>((block >> 16) & 0xFF);
-        array[offset + 3] = <u8>((block >> 24) & 0xFF);
-      }
-      if (j % blockCount === 0) {
-        s = cloneArray(s);
-        this.f(s);
-      }
-    }
-    if (extraBytes > 0) {
-      offset = j << 2;
-      block = s[i];
-      array[offset] = <u8>(block & 0xFF);
-      if (extraBytes > 1) {
-        array[offset + 1] = <u8>((block >> 8) & 0xFF);
-      }
-      if (extraBytes > 2) {
-        array[offset + 2] = <u8>((block >> 16) & 0xFF);
-      }
-    }
-    return array;
-  }
 
   f(s: Uint32Array): void {
     let h: u32, l: u32, n: i32;
@@ -573,5 +417,7 @@ export function getBlocks(): Uint32Array {
   return keccakInstance.blocks;
 }
 
-
+export function testFormatStringMessage(message: string): Uint32Array {
+  return formatStringMessage(message);
+}
 
