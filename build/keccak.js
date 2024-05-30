@@ -26,6 +26,46 @@ async function instantiate(module, imports = {}) {
       // assembly/keccak1/getBlocks() => ~lib/typedarray/Uint32Array
       return __liftTypedArray(Uint32Array, exports.getBlocks() >>> 0);
     },
+    testFormatStringMessage(message) {
+      // assembly/keccak1/testFormatStringMessage(~lib/string/String) => ~lib/typedarray/Uint32Array
+      message = __lowerString(message) || __notnull();
+      return __liftTypedArray(Uint32Array, exports.testFormatStringMessage(message) >>> 0);
+    },
+    testUpdateString(message) {
+      // assembly/keccak1/testUpdateString(~lib/string/String) => ~lib/typedarray/Uint32Array
+      message = __lowerString(message) || __notnull();
+      return __liftTypedArray(Uint32Array, exports.testUpdateString(message) >>> 0);
+    },
+    debug_blockCount(message) {
+      // assembly/keccak1/debug_blockCount(~lib/string/String) => u32
+      message = __lowerString(message) || __notnull();
+      return exports.debug_blockCount(message) >>> 0;
+    },
+    debug_byteCount(message) {
+      // assembly/keccak1/debug_byteCount(~lib/string/String) => u32
+      message = __lowerString(message) || __notnull();
+      return exports.debug_byteCount(message) >>> 0;
+    },
+    testblocks0(message) {
+      // assembly/keccak1/testblocks0(~lib/string/String) => ~lib/typedarray/Uint32Array
+      message = __lowerString(message) || __notnull();
+      return __liftTypedArray(Uint32Array, exports.testblocks0(message) >>> 0);
+    },
+    testblocks1(message) {
+      // assembly/keccak1/testblocks1(~lib/string/String) => ~lib/typedarray/Uint32Array
+      message = __lowerString(message) || __notnull();
+      return __liftTypedArray(Uint32Array, exports.testblocks1(message) >>> 0);
+    },
+    testblocks2(message) {
+      // assembly/keccak1/testblocks2(~lib/string/String) => ~lib/typedarray/Uint32Array
+      message = __lowerString(message) || __notnull();
+      return __liftTypedArray(Uint32Array, exports.testblocks2(message) >>> 0);
+    },
+    testFinalize(message) {
+      // assembly/keccak1/testFinalize(~lib/string/String) => ~lib/typedarray/Uint32Array
+      message = __lowerString(message) || __notnull();
+      return __liftTypedArray(Uint32Array, exports.testFinalize(message) >>> 0);
+    },
   }, exports);
   function __liftString(pointer) {
     if (!pointer) return null;
@@ -73,6 +113,14 @@ export const {
   memory,
   keccak_256,
   getBlocks,
+  testFormatStringMessage,
+  testUpdateString,
+  debug_blockCount,
+  debug_byteCount,
+  testblocks0,
+  testblocks1,
+  testblocks2,
+  testFinalize,
 } = await (async url => instantiate(
   await (async () => {
     try { return await globalThis.WebAssembly.compileStreaming(globalThis.fetch(url)); }
